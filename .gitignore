@@ -5,3 +5,16 @@ __pycache__/
 media/
 staticfiles/
 .DS_Store
+
+# Local development and generated files
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.coverage
+coverage.json
+coverage.xml
+htmlcov/
+.ruff_cache/
+*.backup_*
+*.save
