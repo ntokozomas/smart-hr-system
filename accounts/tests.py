@@ -195,3 +195,14 @@ class AccountsRelationshipTests(TestCase):
         employee.delete()
         self.user.refresh_from_db()
         self.assertIsNone(self.user.employee_id)
+
+
+class SuperuserRoleTests(TestCase):
+    """createsuperuser must work without asking for a role (README setup step 7)."""
+
+    def test_superuser_gets_administrator_role(self):
+        admin = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="SmartHr2026"
+        )
+        self.assertEqual(admin.role.role_name, "Administrator")
+        self.assertTrue(admin.is_superuser)

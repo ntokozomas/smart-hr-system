@@ -5,7 +5,7 @@ Implements the Role-Based Access Control (RBAC) structure
 defined in Section 4.5.11 of the project specification.
 """
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 from config.models import TimeStampedModel
@@ -42,6 +42,14 @@ class Permission(TimeStampedModel):
         return f"{self.module} - {self.permission_name}"
 
 
+class SmartHRUserManager(UserManager):
+    """Superusers created from the command line get the Administrator role."""
+
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault("role", Role.objects.get(role_name="Administrator"))
+        return super().create_superuser(username, email, password, **extra_fields)
+
+
 class User(AbstractUser):
     """
     Custom Smart HR user account.
@@ -49,6 +57,8 @@ class User(AbstractUser):
     Extends Django AbstractUser to preserve secure password
     authentication and built-in user management functionality.
     """
+
+    objects = SmartHRUserManager()
 
     # Required audit timestamps for the User table.
     created_at = models.DateTimeField(auto_now_add=True)

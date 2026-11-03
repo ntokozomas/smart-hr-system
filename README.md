@@ -9,6 +9,7 @@ Django 5.2 + PostgreSQL. Check the group's build reference before adding anythin
 2. Open psql (Windows: "SQL Shell (psql)") and run:
        CREATE USER smarthr WITH PASSWORD 'smarthr_dev';
        CREATE DATABASE smarthr OWNER smarthr;
+       ALTER USER smarthr CREATEDB;   -- lets Django create its test database
 3. Clone the repo and create a virtual environment:
    - Mac: python3.12 -m venv .venv && source .venv/bin/activate
    - Windows: py -3.12 -m venv .venv  then  .venv\Scripts\activate
