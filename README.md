@@ -32,3 +32,50 @@ Then open http://127.0.0.1:8000/admin
 - Open a pull request; one other person reviews before merging.
 - Pull main every morning: git pull origin main
 - Never commit .env
+
+## Building your module (read before you start)
+
+Everything below already exists in `main`. Use it instead of writing your own.
+
+**1. URLs.** Create `yourapp/urls.py` with `app_name = "yourapp"`, add one line to
+`config/urls.py` (e.g. `path("leave/", include("leave.urls"))`), and give your main page
+the URL name from `accounts/menu.py`. It then appears in the sidebar automatically:
+
+| Menu item | URL name | Owner |
+| --- | --- | --- |
+| Employees / My Profile / search | `employees:list`, `employees:my_profile`, `employees:search` | Angelique |
+| Leave / Attendance | `leave:home`, `leave:attendance` | Refilwe |
+| Recruitment | `recruitment:home` | Juandre |
+| Onboarding & Exit / Performance | `lifecycle:home`, `performance:home` | Jonathan |
+| Reports | `analytics:reports` | Graeme |
+
+**2. Protect every view** (NFR-03). Every page already needs a login. Then check the permission:
+
+    from accounts.permissions import require_permission, scope_queryset
+
+    @require_permission("leave.approve")
+    def approvals(request):
+        pending = scope_queryset(LeaveRequest.objects.filter(status="Pending"), request.user)
+
+`scope_queryset` gives HR Officers everything, Managers their own department and Employees
+their own records. Pass `""` as the third argument when the queryset is `Employee` itself.
+For class-based views use `RequirePermissionMixin` with `required_permissions = ("...",)`.
+Permission codes are listed in `accounts/migrations/0008_seed_permissions.py`.
+Public pages (the Careers pages) need `@login_not_required` from `django.contrib.auth.decorators`.
+
+**3. Templates.** Extend the shared layout:
+
+    {% extends "base.html" %}
+    {% load ui %}
+    {% block title %}Leave{% endblock %}
+    {% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Leave{% endblock %}
+    {% block page_title %}Leave requests{% endblock %}
+    {% block page_actions %}<a class="btn btn-primary" href="...">Apply for leave</a>{% endblock %}
+    {% block content %} ... {% endblock %}
+
+Ready-made pieces: `{% include "partials/form.html" with form=form submit_label="Submit" %}`,
+`{% status_badge leave.status %}`, `{% include "partials/empty_state.html" with message="..." %}`,
+`{% include "partials/pagination.html" %}`, and the CSS classes `card`, `data-table`
+(inside `table-wrap`), `btn btn-primary / btn-success / btn-secondary / btn-danger`,
+`stat-grid` + `stat-card`, `alert alert-warning`. Show messages with
+`messages.success(request, "...")`. Public pages extend `base_public.html`.
