@@ -1,0 +1,13 @@
+{% comment %}A whole form with the shared field layout.
+Usage: {% include "partials/form.html" with form=form submit_label="Submit request" %}{% endcomment %}
+<form method="post" class="form card" {% if form.is_multipart %}enctype="multipart/form-data"{% endif %} novalidate>
+  {% csrf_token %}
+  {% for error in form.non_field_errors %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endfor %}
+  {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+  {% for field in form.visible_fields %}{% include "partials/form_field.html" with field=field %}{% endfor %}
+  <div class="form-actions">
+    {% if cancel_url %}<a class="btn btn-secondary" href="{{ cancel_url }}">Cancel</a>{% endif %}
+    <button type="submit" class="btn btn-primary">{{ submit_label|default:"Save" }}</button>
+  </div>
+  <p class="help-text">Fields marked <span class="req">*</span> are required.</p>
+</form>

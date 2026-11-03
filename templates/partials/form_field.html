@@ -1,0 +1,8 @@
+{% comment %}Form field group (4.7.4): label, required marker, input, help text and inline error (NFR-14).
+Usage: {% include "partials/form_field.html" with field=form.start_date %}{% endcomment %}
+<div class="form-field{% if field.errors %} has-error{% endif %}">
+  <label class="label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  {{ field }}
+  {% if field.help_text %}<div class="help-text">{{ field.help_text|safe }}</div>{% endif %}
+  {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+</div>

@@ -1,0 +1,16 @@
+{% extends "base_public.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <h1>Log in</h1>
+  <p class="help-text">Use your username or work email.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endfor %}
+    {% include "partials/form_field.html" with field=form.username %}
+    {% include "partials/form_field.html" with field=form.password %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+  </form>
+</div>
+{% endblock %}
