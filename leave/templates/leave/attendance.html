@@ -1,0 +1,154 @@
+
+{% extends "base.html" %}
+{% load ui %}
+
+{% block title %}Attendance Management{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}">Dashboard</a> › Attendance
+{% endblock %}
+
+{% block page_title %}Attendance Management{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Today's Attendance</h2>
+
+    <p>
+        Record your daily arrival and departure times using the
+        buttons below.
+    </p>
+
+    {% if can_record %}
+
+        {% if today_record %}
+            <p>
+                <strong>Check-in time:</strong>
+                {{ today_record.check_in_time|time:"H:i"|default:"Not recorded" }}
+            </p>
+
+            <p>
+                <strong>Check-out time:</strong>
+                {{ today_record.check_out_time|time:"H:i"|default:"Not recorded" }}
+            </p>
+
+            {% if not today_record.check_in_time %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        name="action"
+                        value="check_in"
+                        class="btn btn-primary">
+                        Check In
+                    </button>
+                </form>
+
+            {% elif not today_record.check_out_time %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        name="action"
+                        value="check_out"
+                        class="btn btn-success">
+                        Check Out
+                    </button>
+                </form>
+
+            {% else %}
+
+                <div class="alert alert-warning">
+                    Your attendance for today has been completed.
+                </div>
+
+            {% endif %}
+
+        {% else %}
+
+            <p>You have not recorded your attendance today.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    name="action"
+                    value="check_in"
+                    class="btn btn-primary">
+                    Check In
+                </button>
+            </form>
+
+        {% endif %}
+
+    {% else %}
+
+        <p>Attendance recording is not available for this account.</p>
+
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Attendance History</h2>
+
+    <p>View recorded employee attendance information.</p>
+
+    {% if attendance_records %}
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Date</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for record in attendance_records %}
+                        <tr>
+                            <td>
+                                {{ record.employee.first_name }}
+                                {{ record.employee.last_name }}
+                            </td>
+
+                            <td>
+                                {{ record.employee.department.department_name }}
+                            </td>
+
+                            <td>
+                                {{ record.date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+                                {{ record.check_in_time|time:"H:i"|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ record.check_out_time|time:"H:i"|default:"—" }}
+                            </td>
+
+                            <td>
+                                {% status_badge record.status %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+
+        {% include "partials/empty_state.html" with message="No attendance records are available yet." %}
+
+    {% endif %}
+</div>
+
+{% endblock %}
