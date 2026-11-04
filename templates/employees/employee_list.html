@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Records{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  / Employee Records
+{% endblock %}
+
+{% block page_title %}Employee Records{% endblock %}
+
+{% block page_actions %}
+  {% if can_manage %}
+    <a href="{% url 'employees:create' %}" class="btn btn-primary">+ Add Employee</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <form method="get" class="form-actions">
+    <div class="form-field">
+      <label class="label" for="employee-search">Search employees</label>
+      <input
+        type="search"
+        id="employee-search"
+        name="q"
+        value="{{ query }}"
+        placeholder="Employee number, name or email"
+      >
+    </div>
+
+    <div class="form-field">
+      <label class="label" for="department">Department</label>
+      <select id="department" name="department">
+        <option value="">All departments</option>
+        {% for department in departments %}
+          <option
+            value="{{ department.id }}"
+            {% if department_filter == department.id|stringformat:"s" %}selected{% endif %}
+          >
+            {{ department.department_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label class="label" for="status">Employment status</label>
+      <select id="status" name="status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option
+            value="{{ value }}"
+            {% if status_filter == value %}selected{% endif %}
+          >
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label class="label">&nbsp;</label>
+      <div>
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a href="{% url 'employees:list' %}" class="btn btn-secondary">Clear</a>
+      </div>
+    </div>
+  </form>
+</section>
+
+<section class="stat-grid">
+  <article class="stat-card">
+    <span class="help-text">Employees found</span>
+    <h2>{{ total_employees }}</h2>
+  </article>
+</section>
+
+<section class="card">
+  <h2>Employee Directory</h2>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Employee Number</th>
+          <th>Employee Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Position</th>
+          <th>Manager</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for employee in employees %}
+          <tr>
+            <td>{{ employee.employee_number }}</td>
+            <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+            <td>{{ employee.email }}</td>
+            <td>{{ employee.department.department_name }}</td>
+            <td>{{ employee.position.position_title }}</td>
+            <td>
+              {% if employee.manager %}
+                {{ employee.manager.first_name }} {{ employee.manager.last_name }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if employee.employment_status == "Active" %}
+                <span class="badge ok">{{ employee.get_employment_status_display }}</span>
+              {% elif employee.employment_status == "Inactive" %}
+                <span class="badge neutral">{{ employee.get_employment_status_display }}</span>
+              {% else %}
+                <span class="badge pend">{{ employee.get_employment_status_display }}</span>
+              {% endif %}
+            </td>
+             <td>
+    {% if can_manage %}
+        <a href="{% url 'employees:edit' employee.pk %}"
+           class="btn btn-secondary">
+            Edit
+        </a>
+
+        {% if employee.employment_status == "Inactive" %}
+            <form method="post"
+                  action="{% url 'employees:activate' employee.pk %}"
+                  style="display:inline;">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn btn-primary"
+                        onclick="return confirm('Are you sure you want to reactivate this employee?');">
+                    Activate
+                </button>
+            </form>
+        {% else %}
+            <form method="post"
+                  action="{% url 'employees:deactivate' employee.pk %}"
+                  style="display:inline;">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn btn-secondary"
+                        onclick="return confirm('Are you sure you want to deactivate this employee?');">
+                    Deactivate
+                </button>
+            </form>
+        {% endif %}
+    {% endif %}
+</td>     
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <h3>No employees found</h3>
+                <p>There are no employee records matching your search.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination" aria-label="Employee pages">
+      {% if page_obj.has_previous %}
+        <a href="?q={{ query|urlencode }}&department={{ department_filter }}&status={{ status_filter }}&page={{ page_obj.previous_page_number }}">
+          Previous
+        </a>
+      {% endif %}
+
+      <span>
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?q={{ query|urlencode }}&department={{ department_filter }}&status={{ status_filter }}&page={{ page_obj.next_page_number }}">
+          Next
+        </a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</section>
+
+{% endblock %}
