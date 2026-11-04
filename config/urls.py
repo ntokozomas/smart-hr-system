@@ -9,5 +9,6 @@ urlpatterns = [
     path("", account_views.dashboard, name="dashboard"),
     path("help/", account_views.help_page, name="help"),
     path("accounts/", include("accounts.urls")),
+    path("recruitment/", include("recruitment.urls")),
     path("admin/", admin.site.urls),
 ]

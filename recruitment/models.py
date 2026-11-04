@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.db.models import F, Q
 
@@ -74,6 +75,7 @@ class Applicant(TimeStampedModel):
 
 
 class Application(TimeStampedModel):
+    public_reference = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     """Connects an applicant to a vacancy and stores application-specific data."""
 
     class Status(models.TextChoices):
@@ -96,6 +98,8 @@ class Application(TimeStampedModel):
     )
     cover_letter = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    interview_date = models.DateTimeField(blank=True, null=True)
+    interview_feedback = models.TextField(blank=True, null=True)
     match_score = models.DecimalField(
         max_digits=5, decimal_places=2, blank=True, null=True
     )

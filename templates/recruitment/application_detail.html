@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Review application{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'recruitment:home' %}">Recruitment</a> / <a href="{% url 'recruitment:application_list' %}">Applications</a> / Review{% endblock %}
+{% block page_title %}Review application{% endblock %}
+{% block content %}
+<div class="card">
+<h2>Applicant information</h2>
+<p><strong>Name:</strong> {{ application.applicant.first_name }} {{ application.applicant.last_name }}</p>
+<p><strong>Email:</strong> {{ application.applicant.email }}</p>
+<p><strong>Phone:</strong> {{ application.applicant.phone_number|default:"Not provided" }}</p>
+<p><strong>Vacancy:</strong> {{ application.vacancy.title }}</p>
+<p><strong>Application date:</strong> {{ application.application_date|date:"d M Y" }}</p>
+<p><strong>Application reference:</strong> {{ application.public_reference }}</p>
+<p><strong>POPIA consent:</strong> {% if application.applicant.consent_given %}Recorded on {{ application.applicant.consent_date|date:"d M Y H:i" }}{% else %}Not recorded{% endif %}</p>
+<p><a class="btn btn-secondary" href="{% url 'recruitment:download_cv' application.pk %}">Download CV</a></p>
+<h2>Cover letter</h2>
+<div>{{ application.cover_letter|default:"No cover letter supplied."|linebreaks }}</div>
+<hr>
+<h2>Update application</h2>
+<form method="post" action="{% url 'recruitment:application_update' application.pk %}" class="form">
+{% csrf_token %}
+{% for field in update_form %}
+<div class="form-field">
+<label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+{{ field }}
+{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+</div>
+{% endfor %}
+<button class="btn btn-primary" type="submit">Save application update</button>
+</form>
+{% if application.status == "Hired" %}
+<hr>
+<h2>Employee onboarding</h2>
+<p>This successful applicant can now be converted into an employee record.</p>
+<a class="btn btn-success" href="{% url 'recruitment:convert_to_employee' application.pk %}">Convert to employee</a>
+{% endif %}
+</div>
+{% endblock %}
