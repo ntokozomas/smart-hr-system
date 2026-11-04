@@ -49,7 +49,7 @@ def navigation(request):
     except NoReverseMatch:
         search_url = None
     try:
-        profile_url = reverse("employees:my_profile")
+        profile_url = reverse("accounts:profile")
     except NoReverseMatch:
         profile_url = None
     return {
