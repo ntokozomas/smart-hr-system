@@ -1,3 +1,4 @@
+
 from datetime import date, time
 from decimal import Decimal
 
@@ -23,7 +24,9 @@ class LeaveViewTests(TestCase):
         self.other_employee = self.create_employee(
             "Mary", "mary@example.com", self.other_department
         )
-        self.manager_employee = self.create_employee("Peter", "peter@example.com", self.department)
+        self.manager_employee = self.create_employee(
+            "Peter", "peter@example.com", self.department
+        )
 
         self.employee_user = self.create_user("employee_test", "Employee", self.employee)
         self.manager_user = self.create_user("manager_test", "Manager", self.manager_employee)
@@ -170,7 +173,9 @@ class LeaveViewTests(TestCase):
 
         self.client.force_login(self.manager_user)
 
-        response = self.client.get(reverse("leave:review", kwargs={"pk": leave_request.pk}))
+        response = self.client.get(
+            reverse("leave:review", kwargs={"pk": leave_request.pk})
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -182,15 +187,38 @@ class LeaveViewTests(TestCase):
         leave_request = self.create_leave_request(self.other_employee)
         self.client.force_login(self.manager_user)
 
-        response = self.client.get(reverse("leave:review", kwargs={"pk": leave_request.pk}))
+        response = self.client.get(
+            reverse("leave:review", kwargs={"pk": leave_request.pk})
+        )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_manager_cannot_review_own_leave_request(self):
+        leave_request = self.create_leave_request(self.manager_employee)
+        self.client.force_login(self.manager_user)
+
+        response = self.client.post(
+            reverse("leave:review", kwargs={"pk": leave_request.pk}),
+            {"decision": "Approved"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        leave_request.refresh_from_db()
+
+        self.assertEqual(
+            leave_request.status,
+            LeaveRequest.Status.PENDING,
+        )
+        self.assertIsNone(leave_request.approved_by)
 
     def test_employee_cannot_access_leave_review(self):
         leave_request = self.create_leave_request(self.employee)
         self.client.force_login(self.employee_user)
 
-        response = self.client.get(reverse("leave:review", kwargs={"pk": leave_request.pk}))
+        response = self.client.get(
+            reverse("leave:review", kwargs={"pk": leave_request.pk})
+        )
 
         self.assertEqual(response.status_code, 403)
 
@@ -215,11 +243,17 @@ class AttendanceViewTests(TestCase):
 
     def setUp(self):
         self.department = Department.objects.create(department_name="IT Department")
-        self.other_department = Department.objects.create(department_name="Finance Department")
+        self.other_department = Department.objects.create(
+            department_name="Finance Department"
+        )
         self.position = JobPosition.objects.create(position_title="IT Technician")
 
-        self.employee = self.create_employee("Alice", "alice@example.com", self.department)
-        self.other_employee = self.create_employee("Bob", "bob@example.com", self.other_department)
+        self.employee = self.create_employee(
+            "Alice", "alice@example.com", self.department
+        )
+        self.other_employee = self.create_employee(
+            "Bob", "bob@example.com", self.other_department
+        )
 
         role = Role.objects.get(role_name="Employee")
 

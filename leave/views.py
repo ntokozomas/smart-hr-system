@@ -1,3 +1,4 @@
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
@@ -100,6 +101,10 @@ def review_leave(request, pk):
     )
 
     leave_request = get_object_or_404(pending_requests, pk=pk)
+
+    # Prevent managers or HR officers from reviewing their own leave requests.
+    if leave_request.employee_id == request.user.employee_id:
+        raise PermissionDenied("You cannot review your own leave request.")
 
     department_conflicts = (
         LeaveRequest.objects.filter(
