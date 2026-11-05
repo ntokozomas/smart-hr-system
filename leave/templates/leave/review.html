@@ -1,0 +1,127 @@
+
+{% extends "base.html" %}
+
+{% block title %}Review Leave Application{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}">Dashboard</a> ›
+<a href="{% url 'leave:home' %}">Leave</a> › Review
+{% endblock %}
+
+{% block page_title %}Review Leave Application{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Employee Leave Details</h2>
+
+    <table class="data-table">
+        <tbody>
+            <tr>
+                <th>Employee</th>
+                <td>{{ leave_request.employee.first_name }}
+                    {{ leave_request.employee.last_name }}</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>{{ leave_request.employee.department.department_name }}</td>
+            </tr>
+            <tr>
+                <th>Leave Type</th>
+                <td>{{ leave_request.get_leave_type_display }}</td>
+            </tr>
+            <tr>
+                <th>Start Date</th>
+                <td>{{ leave_request.start_date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th>End Date</th>
+                <td>{{ leave_request.end_date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th>Working Days Requested</th>
+                <td>{{ leave_request.days_requested }}</td>
+            </tr>
+            <tr>
+                <th>Reason</th>
+                <td>{{ leave_request.reason|default:"Not provided" }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ leave_request.get_status_display }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Department Leave Conflict Check</h2>
+
+    {% if department_conflicts %}
+        <div class="alert alert-warning">
+            <strong>Potential leave conflict detected!</strong>
+            Other employees in this department have approved leave
+            overlapping with these dates.
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conflict in department_conflicts %}
+                        <tr>
+                            <td>
+                                {{ conflict.employee.first_name }}
+                                {{ conflict.employee.last_name }}
+                            </td>
+                            <td>{{ conflict.get_leave_type_display }}</td>
+                            <td>{{ conflict.start_date|date:"d M Y" }}</td>
+                            <td>{{ conflict.end_date|date:"d M Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No overlapping approved leave was found in this department.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Leave Decision</h2>
+
+    <p>Review the application and any identified conflicts before making a decision.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            name="decision"
+            value="Approved"
+            class="btn btn-success">
+            Approve Leave
+        </button>
+
+        <button
+            type="submit"
+            name="decision"
+            value="Rejected"
+            class="btn btn-danger">
+            Reject Leave
+        </button>
+
+        <a href="{% url 'leave:home' %}" class="btn btn-secondary">
+            Cancel
+        </a>
+    </form>
+</div>
+
+{% endblock %}
