@@ -1,0 +1,13 @@
+{% extends "base_public.html" %}
+{% block title %}Application submitted{% endblock %}
+{% block content %}
+<div class="narrow card" style="margin:0 auto">
+<h1>Application submitted</h1>
+<p>Your application has been received successfully.</p>
+<p><strong>Your application reference:</strong></p>
+<p style="font-size:20px;overflow-wrap:anywhere">{{ application.public_reference }}</p>
+<p>Please keep this reference safe. You will need it together with your email address to check your application status.</p>
+<a class="btn btn-primary" href="{% url 'recruitment:application_status' %}">Check application status</a>
+<a class="btn btn-secondary" href="{% url 'recruitment:careers' %}">Return to Careers</a>
+</div>
+{% endblock %}

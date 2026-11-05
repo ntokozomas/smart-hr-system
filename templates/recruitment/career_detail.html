@@ -1,0 +1,20 @@
+{% extends "base_public.html" %}
+{% block title %}{{ vacancy.title }}{% endblock %}
+{% block content %}
+<div class="narrow" style="margin:0 auto">
+<p><a href="{% url 'recruitment:careers' %}">← All vacancies</a></p>
+<article class="card">
+<h1>{{ vacancy.title }}</h1>
+<p><strong>Department:</strong> {{ vacancy.department }}</p>
+<p><strong>Position:</strong> {{ vacancy.position }}</p>
+<p><strong>Posted:</strong> {{ vacancy.date_posted|date:"d M Y" }}</p>
+<p><strong>Closing date:</strong> {{ vacancy.closing_date|date:"d M Y"|default:"Not specified" }}</p>
+<hr>
+<h2>Job description</h2>
+<div class="prose">{{ vacancy.description|linebreaks }}</div>
+<h2>Requirements</h2>
+<div class="prose">{{ vacancy.requirements|linebreaks }}</div>
+<a class="btn btn-primary" href="{% url 'recruitment:apply' vacancy.pk %}">Apply for this vacancy</a>
+</article>
+</div>
+{% endblock %}

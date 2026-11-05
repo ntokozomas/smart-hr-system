@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ page_heading }}{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> / <a href="{% url 'recruitment:home' %}">Recruitment</a> / <a href="{% url 'recruitment:vacancy_list' %}">Vacancies</a> / {{ page_heading }}{% endblock %}
+{% block page_title %}{{ page_heading }}{% endblock %}
+{% block content %}
+<div class="narrow">
+{% include "partials/form.html" with form=form submit_label="Save vacancy" cancel_url=recruitment_list_url %}
+</div>
+{% endblock %}
