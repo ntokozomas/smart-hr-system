@@ -3,3 +3,4 @@ psycopg[binary]~=3.3
 python-dotenv~=1.2
 ruff
 coverage
+holidays>=0.108,<0.109
