@@ -11,6 +11,8 @@ urlpatterns = [
     path("help/", account_views.help_page, name="help"),
     path("accounts/", include("accounts.urls")),
     path("employees/", include("employees.urls")),
+    path("leave/", include("leave.urls")),
+    path("recruitment/", include("recruitment.urls")),
     path("admin/", admin.site.urls),
     
 ]
