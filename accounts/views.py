@@ -2,12 +2,12 @@
 
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
 from .context_processors import visible_menu
-from .forms import LoginForm
+from .forms import LoginForm, ProfileForm
 
 
 @method_decorator(login_not_required, name="dispatch")
@@ -52,3 +52,21 @@ def dashboard(request):
 def help_page(request):
     """NFR-17: in-app help page listing what each section is for."""
     return render(request, "help.html")
+
+def my_profile(request):
+    """Allow the logged-in user to view and update their own profile."""
+
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:profile")
+    else:
+        form = ProfileForm(request.POST, instance=request.user)
+
+    return render(
+        request,
+        "accounts/profile.html",
+        {"form": form},
+    )
