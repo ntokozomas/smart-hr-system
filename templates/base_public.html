@@ -8,10 +8,12 @@
 </head>
 <body class="public">
   {# Pages without a login: the login page and the public Careers pages (FR-23). #}
+  {% block page %}
   <header class="topbar"><span class="logo">Smart<span>HR</span></span></header>
   <main class="public-content">
     {% include "partials/messages.html" %}
     {% block content %}{% endblock %}
   </main>
+  {% endblock %}
 </body>
 </html>
