@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from accounts.permissions import (
     has_permission,
@@ -298,6 +299,7 @@ def attendance(request):
 
         return redirect("leave:attendance")
 
+    # Only retrieve attendance records the logged-in user is authorised to view.
     attendance_records = scope_queryset(
         Attendance.objects.select_related(
             "employee",
@@ -305,6 +307,75 @@ def attendance(request):
         ),
         request.user,
     ).order_by("-date")
+
+    # Prepare employee and department dropdown options.
+    # These options are based on the user's permitted attendance records.
+    employee_options = (
+        attendance_records.order_by()
+        .values(
+            "employee_id",
+            "employee__first_name",
+            "employee__last_name",
+        )
+        .distinct()
+        .order_by(
+            "employee__first_name",
+            "employee__last_name",
+        )
+    )
+
+    department_options = (
+        attendance_records.order_by()
+        .values(
+            "employee__department_id",
+            "employee__department__department_name",
+        )
+        .distinct()
+        .order_by(
+            "employee__department__department_name",
+        )
+    )
+
+    # Read the selected filter values.
+    selected_employee = request.GET.get("employee", "")
+    selected_department = request.GET.get("department", "")
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+    selected_status = request.GET.get("status", "")
+
+    # Filter by employee.
+    if selected_employee.isdigit():
+        attendance_records = attendance_records.filter(
+            employee_id=int(selected_employee)
+        )
+
+    # Filter by department.
+    if selected_department.isdigit():
+        attendance_records = attendance_records.filter(
+            employee__department_id=int(selected_department)
+        )
+
+    # Filter by starting date.
+    parsed_date_from = parse_date(date_from) if date_from else None
+
+    if parsed_date_from:
+        attendance_records = attendance_records.filter(
+            date__gte=parsed_date_from
+        )
+
+    # Filter by ending date.
+    parsed_date_to = parse_date(date_to) if date_to else None
+
+    if parsed_date_to:
+        attendance_records = attendance_records.filter(
+            date__lte=parsed_date_to
+        )
+
+    # Filter by attendance status.
+    if selected_status in Attendance.Status.values:
+        attendance_records = attendance_records.filter(
+            status=selected_status
+        )
 
     today_record = None
 
@@ -322,6 +393,14 @@ def attendance(request):
             and employee is not None
             and employee.employment_status == Employee.EmploymentStatus.ACTIVE
         ),
+        "employee_options": employee_options,
+        "department_options": department_options,
+        "attendance_statuses": Attendance.Status.choices,
+        "selected_employee": selected_employee,
+        "selected_department": selected_department,
+        "date_from": date_from,
+        "date_to": date_to,
+        "selected_status": selected_status,
     }
 
     return render(
