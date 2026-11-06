@@ -1,3 +1,4 @@
+from django.db.models import Min
 from django.utils import timezone
 
 from accounts.permissions import scope_queryset
@@ -51,6 +52,8 @@ def load_report(user, start, end, department=None, leave_type="", today=None):
         Attendance.objects.filter(employee_id__in=ids, date__range=(start, end)), user
     )
 
+    tracking_start = Attendance.objects.aggregate(first=Min("date"))["first"]
+
     return build_report(
         start,
         end,
@@ -58,4 +61,5 @@ def load_report(user, start, end, department=None, leave_type="", today=None):
         rows,
         leaves.values_list("employee_id", "leave_type", "start_date", "end_date"),
         attendance.values_list("employee_id", "date", "status"),
+        tracking_start=tracking_start,
     )

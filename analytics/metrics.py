@@ -94,11 +94,14 @@ def _is_current(employee, day):
     return employee.status != "Inactive"
 
 
-def build_report(start, end, today, employees, leaves, attendance):
+def build_report(start, end, today, employees, leaves, attendance, tracking_start=None):
     in_range = working_dates(start, end)
     in_range_set = set(in_range)
     absence_end = min(end, today)
-    past_days = [day for day in in_range if day <= absence_end]
+    if tracking_start is None:
+        past_days = []
+    else:
+        past_days = [day for day in in_range if tracking_start <= day <= absence_end]
 
     by_id = {employee.id: employee for employee in employees}
     months = {month: Bucket() for month in months_between(start, end)}
@@ -160,6 +163,12 @@ def number(value):
     return str(int(value))
 
 
+def absenteeism_text(bucket):
+    if not bucket.expected:
+        return "-"
+    return f"{bucket.absenteeism:.1f}"
+
+
 def report_tables(report):
     monthly_headers = [
         "Month",
@@ -181,7 +190,7 @@ def report_tables(report):
             number(bucket.expected),
             number(bucket.absent),
             number(bucket.late),
-            f"{bucket.absenteeism:.1f}",
+            absenteeism_text(bucket),
         ]
 
     monthly_rows = [
@@ -204,7 +213,7 @@ def report_tables(report):
             number(row["bucket"].leave_total),
             number(row["bucket"].expected),
             number(row["bucket"].absent),
-            f"{row['bucket'].absenteeism:.1f}",
+            absenteeism_text(row["bucket"]),
         ]
         for row in report.departments
     ]

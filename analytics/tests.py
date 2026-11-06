@@ -42,14 +42,30 @@ class MetricsTests(SimpleTestCase):
     def test_absence_excludes_attendance_and_leave(self):
         attendance = [(1, date(2026, 3, 2), "Present"), (1, date(2026, 3, 3), "Late")]
         leaves = [(1, "Sick", date(2026, 3, 4), date(2026, 3, 4))]
-        report = build_report(self.start, self.end, self.today, self.staff[:1], leaves, attendance)
+        report = build_report(
+            self.start,
+            self.end,
+            self.today,
+            self.staff[:1],
+            leaves,
+            attendance,
+            tracking_start=self.start,
+        )
         self.assertEqual(report.totals.expected, 5)
         self.assertEqual(report.totals.absent, 2)
         self.assertEqual(report.totals.late, 1)
         self.assertEqual(report.totals.absenteeism, 40.0)
 
     def test_future_days_are_not_counted_as_absent(self):
-        report = build_report(self.start, self.end, date(2026, 3, 2), self.staff[:1], [], [])
+        report = build_report(
+            self.start,
+            self.end,
+            date(2026, 3, 2),
+            self.staff[:1],
+            [],
+            [],
+            tracking_start=self.start,
+        )
         self.assertEqual(report.totals.expected, 1)
 
     def test_leavers_and_inactive_staff_are_not_expected(self):
@@ -57,9 +73,37 @@ class MetricsTests(SimpleTestCase):
             EmployeeRow(1, "Sales", date(2024, 1, 1), "Inactive", date(2026, 3, 3)),
             EmployeeRow(2, "Sales", date(2024, 1, 1), "Inactive"),
         ]
-        report = build_report(self.start, self.end, self.today, staff, [], [])
+        report = build_report(
+            self.start, self.end, self.today, staff, [], [], tracking_start=self.start
+        )
         self.assertEqual(report.totals.expected, 2)
         self.assertEqual(report.totals.headcount, 0)
+
+    def test_month_with_no_attendance_is_not_counted_as_absent(self):
+        attendance = [(1, date(2026, 3, 2), "Present")]
+        report = build_report(
+            date(2026, 1, 1),
+            self.end,
+            self.today,
+            self.staff[:1],
+            [],
+            attendance,
+            tracking_start=date(2026, 3, 2),
+        )
+        january, february, march = (row["bucket"] for row in report.months)
+        for month in (january, february):
+            self.assertEqual(month.expected, 0)
+            self.assertEqual(month.absent, 0)
+            self.assertEqual(month.absenteeism, 0.0)
+        self.assertEqual(march.expected, 5)
+        self.assertEqual(march.absent, 4)
+        monthly_rows = report_tables(report)[0][2]
+        self.assertEqual([row[-1] for row in monthly_rows], ["-", "-", "80.0", "80.0"])
+
+    def test_no_attendance_recorded_means_no_absence(self):
+        report = build_report(self.start, self.end, self.today, self.staff, [], [])
+        self.assertEqual(report.totals.expected, 0)
+        self.assertEqual(report.totals.absent, 0)
 
     def test_report_tables_have_total_row_and_departments(self):
         report = build_report(self.start, self.end, self.today, self.staff, [], [])
@@ -151,6 +195,14 @@ class ReportViewTests(ReportData, TestCase):
         departments = [row[0] for row in response.context["tables"][1][2]]
         self.assertEqual(departments, ["Finance", "Sales"])
         self.assertEqual(response.context["report"].totals.leave_total, 2)
+
+    def test_months_before_attendance_tracking_are_not_counted(self):
+        self.client.force_login(self.hr)
+        response = self.client.get(reverse("analytics:reports"))
+        first_month = response.context["report"].months[0]["bucket"]
+        self.assertEqual(first_month.expected, 0)
+        self.assertEqual(first_month.absent, 0)
+        self.assertEqual(response.context["tables"][0][2][0][-1], "-")
 
     def test_FR38_department_filter(self):
         self.client.force_login(self.hr)
