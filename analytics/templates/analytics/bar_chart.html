@@ -1,0 +1,27 @@
+<figure class="chart">
+  <figcaption class="chart-title">{{ title }}</figcaption>
+  {% if chart.empty %}
+    {% include "partials/empty_state.html" with message=empty_message %}
+  {% else %}
+    <svg class="chart-svg" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ title }}">
+      {% for tick in chart.ticks %}
+        <line class="chart-grid" x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ tick.y }}" y2="{{ tick.y }}"></line>
+        <text class="chart-axis" x="{{ chart.left|add:'-6' }}" y="{{ tick.y }}" text-anchor="end" dominant-baseline="middle">{{ tick.label }}</text>
+      {% endfor %}
+      {% for bar in chart.bars %}
+        {% for segment in bar.segments %}
+          <rect class="{{ segment.css }}" x="{{ segment.x }}" y="{{ segment.y }}" width="{{ segment.width }}" height="{{ segment.height }}"><title>{{ segment.title }}</title></rect>
+        {% endfor %}
+        {% if bar.segments %}<text class="chart-total" x="{{ bar.label_x }}" y="{{ bar.total_y }}" text-anchor="middle">{{ bar.total }}</text>{% endif %}
+        <text class="chart-axis" x="{{ bar.label_x }}" y="{{ chart.label_y }}" text-anchor="middle">{{ bar.label }}</text>
+      {% endfor %}
+    </svg>
+    {% if chart.legend %}
+      <ul class="chart-legend">
+        {% for item in chart.legend %}
+          <li><span class="swatch {{ item.css }}"></span>{{ item.name }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+</figure>

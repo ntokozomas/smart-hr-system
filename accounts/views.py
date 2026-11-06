@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
+from analytics.dashboard import dashboard_context
 from .context_processors import visible_menu
 from .forms import LoginForm, ProfileForm
 
@@ -46,12 +47,15 @@ def dashboard(request):
         for item in group["items"]
         if item["url"] and item["label"] not in ("Dashboard", "Help")
     ]
-    return render(request, "dashboard.html", {"shortcuts": shortcuts})
+    context = {"shortcuts": shortcuts}
+    context.update(dashboard_context(request))
+    return render(request, "dashboard.html", context)
 
 
 def help_page(request):
     """NFR-17: in-app help page listing what each section is for."""
     return render(request, "help.html")
+
 
 def my_profile(request):
     """Allow the logged-in user to view and update their own profile."""

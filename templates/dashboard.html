@@ -1,20 +1,23 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Dashboard{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'analytics/analytics.css' %}">{% endblock %}
 {% block breadcrumbs %}Dashboard{% endblock %}
 {% block page_title %}Welcome, {{ user.first_name|default:user.username }}{% endblock %}
 {% block content %}
 {% comment %}Analytics (T14) adds the HR statistics and charts above the shortcuts.{% endcomment %}
-{% block dashboard_stats %}{% endblock %}
+{% block dashboard_stats %} {% include "analytics/dashboard_stats.html" %} {% endblock %}
 <section>
   <h2>Quick links</h2>
   {% if shortcuts %}
-    <div class="shortcut-grid">
-      {% for item in shortcuts %}
-        <a class="card shortcut" href="{{ item.url }}">{{ item.label }}</a>
-      {% endfor %}
-    </div>
+  <div class="shortcut-grid">
+    {% for item in shortcuts %}
+    <a class="card shortcut" href="{{ item.url }}">{{ item.label }}</a>
+    {% endfor %}
+  </div>
   {% else %}
-    {% include "partials/empty_state.html" with message="Your sections will appear here as they are built." %}
+  {% include "partials/empty_state.html" with message="Your sections will appear here as they are built." %}
   {% endif %}
 </section>
 {% endblock %}

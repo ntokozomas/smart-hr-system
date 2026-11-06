@@ -1,0 +1,22 @@
+.chart-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.chart { margin: 0; }
+.chart-title { font-weight: 600; margin-bottom: 8px; }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-grid { stroke: var(--line); stroke-width: 1; }
+.chart-axis { font-size: 11px; fill: var(--grey-mid); }
+.chart-total { font-size: 11px; font-weight: 600; fill: var(--grey-dark); }
+.chart-legend { display: flex; gap: 16px; list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; color: var(--grey-mid); }
+.chart-legend li { display: flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.bar-annual { fill: var(--blue); background: var(--blue); }
+.bar-sick { fill: var(--amber); background: var(--amber); }
+.bar-family { fill: var(--green); background: var(--green); }
+.bar-absent { fill: var(--red); background: var(--red); }
+.report-filters .form-field { margin-bottom: 0; }
+.report-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--grey-mid); }
+.report-details { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 13px; color: var(--grey-mid); margin-bottom: 16px; }
+.report-details strong { color: var(--grey-dark); font-weight: 600; }
+.data-table td.num, .data-table th.num { text-align: right; }
+.data-table tr.total td { font-weight: 700; background: var(--grey-light); }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-head h2 { margin-bottom: 12px; }

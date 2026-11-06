@@ -1,0 +1,88 @@
+{% load ui %}
+{% if dashboard_role %}
+<section class="dashboard-stats">
+  {% if no_employee %}
+    <div class="alert alert-warning">Your account is not linked to an employee record yet, so there are no leave or attendance figures to show.</div>
+  {% endif %}
+
+  {% if stats %}
+    <div class="stat-grid">
+      {% for stat in stats %}
+        <div class="card stat-card{% if stat.tone %} {{ stat.tone }}{% endif %}">
+          <div class="stat-label">{{ stat.label }}</div>
+          <div class="stat-value">{{ stat.value }}</div>
+          {% if stat.note %}<div class="stat-note">{{ stat.note }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if leave_chart %}
+    <div class="section-head">
+      <h2>Last six months</h2>
+      {% if can_view_reports %}<a class="btn btn-secondary" href="{% url 'analytics:reports' %}">Open full report</a>{% endif %}
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">{% include "analytics/bar_chart.html" with chart=leave_chart title="Leave days per month" empty_message="No approved leave in the last six months." %}</div>
+      <div class="card">{% include "analytics/bar_chart.html" with chart=absenteeism_chart title="Absenteeism rate per month (%)" empty_message="No absences in the last six months." %}</div>
+    </div>
+  {% endif %}
+
+  {% if departments %}
+    <h2>Headcount per department</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Department</th><th class="num">Employees</th></tr></thead>
+        <tbody>
+          {% for row in departments %}
+            <tr><td>{{ row.department__department_name }}</td><td class="num">{{ row.total }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if dashboard_role == "Employee" and not no_employee %}
+    <h2>My recent leave requests</h2>
+    {% if recent_requests %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>From</th><th>To</th><th class="num">Days</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for leave in recent_requests %}
+              <tr>
+                <td>{{ leave.get_leave_type_display }}</td>
+                <td>{{ leave.start_date|date:"d M Y" }}</td>
+                <td>{{ leave.end_date|date:"d M Y" }}</td>
+                <td class="num">{{ leave.days_requested|floatformat:"-1" }}</td>
+                <td>{% status_badge leave.status %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with message="You have not submitted any leave requests yet." %}
+    {% endif %}
+  {% endif %}
+
+  {% if recent_audit %}
+    <h2>Recent audit entries</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>When</th><th>User</th><th>Action</th><th>Description</th></tr></thead>
+        <tbody>
+          {% for entry in recent_audit %}
+            <tr>
+              <td class="nowrap">{{ entry.created_at|date:"d M Y H:i" }}</td>
+              <td>{{ entry.username|default:"-" }}</td>
+              <td>{{ entry.action }}</td>
+              <td>{{ entry.description }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
