@@ -52,10 +52,10 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 
-
 def help_page(request):
     """NFR-17: in-app help page listing what each section is for."""
     return render(request, "help.html")
+
 
 def my_profile(request):
     """Allow the logged-in user to view and update their own profile."""
