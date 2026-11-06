@@ -12,12 +12,12 @@ from accounts.permissions import (
 from employees.models import Employee
 
 from .forms import LeaveRequestForm
-from .models import Attendance, LeaveRequest
+from .models import Attendance, LeaveRequest, LeaveBalance
 
 
 @require_permission("leave.apply", "leave.view", "leave.approve")
 def home(request):
-    """Display leave requests according to the user's permissions."""
+    """Display leave requests and the logged-in employee's leave balances."""
 
     leave_requests = scope_queryset(
         LeaveRequest.objects.select_related(
@@ -28,8 +28,20 @@ def home(request):
         request.user,
     ).order_by("-date_submitted")
 
+    employee = getattr(request.user, "employee", None)
+    leave_balances = []
+
+    if employee is not None:
+        current_year = timezone.localdate().year
+
+        leave_balances = LeaveBalance.objects.filter(
+            employee=employee,
+            year=current_year,
+        ).order_by("leave_type")
+
     context = {
         "leave_requests": leave_requests,
+        "leave_balances": leave_balances,
         "can_apply": has_permission(request.user, "leave.apply"),
         "can_approve": has_permission(request.user, "leave.approve"),
     }
@@ -44,10 +56,15 @@ def apply_leave(request):
     employee = getattr(request.user, "employee", None)
 
     if employee is None:
-        raise PermissionDenied("Your account is not linked to an employee record.")
+        raise PermissionDenied(
+            "Your account is not linked to an employee record."
+        )
 
     if request.method == "POST":
-        form = LeaveRequestForm(request.POST)
+        form = LeaveRequestForm(
+            request.POST,
+            employee=employee,
+        )
 
         if form.is_valid():
             leave_request = form.save(commit=False)
@@ -83,9 +100,13 @@ def apply_leave(request):
             return redirect("leave:home")
 
     else:
-        form = LeaveRequestForm()
+        form = LeaveRequestForm(employee=employee)
 
-    return render(request, "leave/apply.html", {"form": form})
+    return render(
+        request,
+        "leave/apply.html",
+        {"form": form},
+    )
 
 
 @require_permission("leave.approve")
@@ -104,7 +125,9 @@ def review_leave(request, pk):
 
     # Prevent managers or HR officers from reviewing their own leave requests.
     if leave_request.employee_id == request.user.employee_id:
-        raise PermissionDenied("You cannot review your own leave request.")
+        raise PermissionDenied(
+            "You cannot review your own leave request."
+        )
 
     department_conflicts = (
         LeaveRequest.objects.filter(
@@ -125,7 +148,10 @@ def review_leave(request, pk):
             LeaveRequest.Status.APPROVED,
             LeaveRequest.Status.REJECTED,
         ):
-            messages.error(request, "Please select a valid decision.")
+            messages.error(
+                request,
+                "Please select a valid decision.",
+            )
 
         else:
             leave_request.status = decision
@@ -153,7 +179,11 @@ def review_leave(request, pk):
         "department_conflicts": department_conflicts,
     }
 
-    return render(request, "leave/review.html", context)
+    return render(
+        request,
+        "leave/review.html",
+        context,
+    )
 
 
 @require_permission("attendance.record_own", "attendance.view")
@@ -167,7 +197,9 @@ def attendance(request):
             raise PermissionDenied
 
         if employee is None:
-            raise PermissionDenied("Your account is not linked to an employee record.")
+            raise PermissionDenied(
+                "Your account is not linked to an employee record."
+            )
 
         if employee.employment_status != Employee.EmploymentStatus.ACTIVE:
             messages.error(
@@ -199,6 +231,7 @@ def attendance(request):
             elif record.check_in_time is None:
                 record.check_in_time = current_time
                 record.status = Attendance.Status.PRESENT
+
                 record.save(
                     update_fields=[
                         "check_in_time",
@@ -206,6 +239,7 @@ def attendance(request):
                         "updated_at",
                     ]
                 )
+
                 messages.success(
                     request,
                     "Check-in recorded successfully.",
@@ -243,19 +277,24 @@ def attendance(request):
 
             else:
                 record.check_out_time = current_time
+
                 record.save(
                     update_fields=[
                         "check_out_time",
                         "updated_at",
                     ]
                 )
+
                 messages.success(
                     request,
                     "Check-out recorded successfully.",
                 )
 
         else:
-            messages.error(request, "Invalid attendance action.")
+            messages.error(
+                request,
+                "Invalid attendance action.",
+            )
 
         return redirect("leave:attendance")
 

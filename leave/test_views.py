@@ -8,11 +8,11 @@ from django.utils import timezone
 
 from accounts.models import Role, User
 from employees.models import Department, Employee, JobPosition
-from leave.models import Attendance, LeaveRequest
+from leave.models import Attendance, LeaveRequest, LeaveBalance
 
 
 class LeaveViewTests(TestCase):
-    """Test leave application, approval and department access."""
+    """Test leave application, approval, balances and department access."""
 
     def setUp(self):
         self.department = Department.objects.create(department_name="Finance")
@@ -56,6 +56,20 @@ class LeaveViewTests(TestCase):
             employee=employee,
         )
 
+    def create_leave_balance(
+        self,
+        employee,
+        entitlement=Decimal("20.0"),
+        leave_type=LeaveRequest.LeaveType.ANNUAL,
+        year=2026,
+    ):
+        return LeaveBalance.objects.create(
+            employee=employee,
+            leave_type=leave_type,
+            year=year,
+            entitlement=entitlement,
+        )
+
     def create_leave_request(
         self,
         employee,
@@ -73,6 +87,7 @@ class LeaveViewTests(TestCase):
         )
 
     def test_employee_can_submit_leave_application(self):
+        self.create_leave_balance(self.employee)
         self.client.force_login(self.employee_user)
 
         response = self.client.post(
@@ -88,14 +103,8 @@ class LeaveViewTests(TestCase):
         self.assertRedirects(response, reverse("leave:home"))
 
         leave_request = LeaveRequest.objects.get(employee=self.employee)
-        self.assertEqual(
-            leave_request.status,
-            LeaveRequest.Status.PENDING,
-        )
-        self.assertEqual(
-            leave_request.days_requested,
-            Decimal("5.0"),
-        )
+        self.assertEqual(leave_request.status, LeaveRequest.Status.PENDING)
+        self.assertEqual(leave_request.days_requested, Decimal("5.0"))
 
     def test_invalid_leave_dates_are_rejected(self):
         self.client.force_login(self.employee_user)
@@ -112,12 +121,10 @@ class LeaveViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(LeaveRequest.objects.filter(employee=self.employee).exists())
-        self.assertIn(
-            "end_date",
-            response.context["form"].errors,
-        )
+        self.assertIn("end_date", response.context["form"].errors)
 
     def test_overlapping_personal_leave_shows_warning(self):
+        self.create_leave_balance(self.employee)
         self.create_leave_request(self.employee)
         self.client.force_login(self.employee_user)
 
@@ -138,6 +145,76 @@ class LeaveViewTests(TestCase):
         )
         self.assertContains(response, "overlaps with these dates")
 
+    def test_employee_cannot_apply_without_configured_leave_balance(self):
+        self.client.force_login(self.employee_user)
+
+        response = self.client.post(
+            reverse("leave:apply"),
+            {
+                "leave_type": "Annual",
+                "start_date": "2026-11-09",
+                "end_date": "2026-11-13",
+                "reason": "Leave without configured balance",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(LeaveRequest.objects.filter(employee=self.employee).exists())
+        self.assertIn("leave_type", response.context["form"].errors)
+
+    def test_employee_cannot_apply_for_more_days_than_available_balance(self):
+        self.create_leave_balance(
+            self.employee,
+            entitlement=Decimal("3.0"),
+        )
+        self.client.force_login(self.employee_user)
+
+        response = self.client.post(
+            reverse("leave:apply"),
+            {
+                "leave_type": "Annual",
+                "start_date": "2026-11-09",
+                "end_date": "2026-11-13",
+                "reason": "Request exceeds available balance",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(LeaveRequest.objects.filter(employee=self.employee).exists())
+        self.assertIn("end_date", response.context["form"].errors)
+        self.assertContains(response, "Insufficient leave balance")
+
+    def test_employee_can_view_own_leave_balance(self):
+        balance = self.create_leave_balance(
+            self.employee,
+            entitlement=Decimal("20.0"),
+        )
+        self.create_leave_request(
+            self.employee,
+            status=LeaveRequest.Status.APPROVED,
+        )
+        self.client.force_login(self.employee_user)
+
+        response = self.client.get(reverse("leave:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["leave_balances"]), 1)
+
+        displayed_balance = response.context["leave_balances"][0]
+        self.assertEqual(displayed_balance.pk, balance.pk)
+        self.assertEqual(displayed_balance.used_days, Decimal("5.0"))
+        self.assertEqual(displayed_balance.remaining_days, Decimal("15.0"))
+
+    def test_pending_leave_does_not_count_as_used_leave(self):
+        balance = self.create_leave_balance(self.employee)
+        self.create_leave_request(
+            self.employee,
+            status=LeaveRequest.Status.PENDING,
+        )
+
+        self.assertEqual(balance.used_days, Decimal("0.0"))
+        self.assertEqual(balance.remaining_days, Decimal("20.0"))
+
     def test_hr_officer_can_approve_leave(self):
         leave_request = self.create_leave_request(self.employee)
         self.client.force_login(self.hr_user)
@@ -151,14 +228,8 @@ class LeaveViewTests(TestCase):
 
         leave_request.refresh_from_db()
 
-        self.assertEqual(
-            leave_request.status,
-            LeaveRequest.Status.APPROVED,
-        )
-        self.assertEqual(
-            leave_request.approved_by,
-            self.hr_user,
-        )
+        self.assertEqual(leave_request.status, LeaveRequest.Status.APPROVED)
+        self.assertEqual(leave_request.approved_by, self.hr_user)
         self.assertIsNotNone(leave_request.decided_at)
 
     def test_manager_can_see_department_leave_conflicts(self):
@@ -178,10 +249,7 @@ class LeaveViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context["department_conflicts"].count(),
-            1,
-        )
+        self.assertEqual(response.context["department_conflicts"].count(), 1)
 
     def test_manager_cannot_review_another_department(self):
         leave_request = self.create_leave_request(self.other_employee)
@@ -206,10 +274,7 @@ class LeaveViewTests(TestCase):
 
         leave_request.refresh_from_db()
 
-        self.assertEqual(
-            leave_request.status,
-            LeaveRequest.Status.PENDING,
-        )
+        self.assertEqual(leave_request.status, LeaveRequest.Status.PENDING)
         self.assertIsNone(leave_request.approved_by)
 
     def test_employee_cannot_access_leave_review(self):
@@ -294,10 +359,7 @@ class AttendanceViewTests(TestCase):
         )
 
         self.assertIsNotNone(record.check_in_time)
-        self.assertEqual(
-            record.status,
-            Attendance.Status.PRESENT,
-        )
+        self.assertEqual(record.status, Attendance.Status.PRESENT)
 
     def test_duplicate_check_in_does_not_create_another_record(self):
         self.client.force_login(self.employee_user)
@@ -343,10 +405,7 @@ class AttendanceViewTests(TestCase):
         record.refresh_from_db()
 
         self.assertIsNotNone(record.check_out_time)
-        self.assertGreater(
-            record.check_out_time,
-            record.check_in_time,
-        )
+        self.assertGreater(record.check_out_time, record.check_in_time)
 
     def test_employee_cannot_check_out_without_check_in(self):
         self.client.force_login(self.employee_user)
