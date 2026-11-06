@@ -18,6 +18,10 @@ Django 5.2 + PostgreSQL. Check the group's build reference before adding anythin
        python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
 6. python manage.py migrate
 7. python manage.py createsuperuser
+8. Load the demo data (45 staff, leave, attendance, applicants and more):
+       python manage.py seed_demo
+   It prints the demo logins (thandi = HR Officer, johan = Manager, sipho = Employee,
+   sysadmin = Administrator; password SmartHr2026). To start fresh: seed_demo --reset
 
 ## Run
 
