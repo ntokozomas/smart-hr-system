@@ -204,6 +204,39 @@ h2 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; }
 .auth-card { max-width: 400px; margin: 0 auto; padding: 28px; }
 .auth-card h1 { margin-bottom: 4px; }
 .auth-card form { margin-top: 18px; }
+.auth-card form .alert { margin-bottom: 16px; }
+
+/* ---------- Login page: two panels ---------- */
+.login-split { display: flex; min-height: 100vh; }
+.login-brand {
+  flex: 1 1 50%; background: var(--blue); color: #fff;
+  display: flex; flex-direction: column; padding: 44px 48px;
+}
+.login-brand .logo { font-size: 24px; }
+.login-tagline { font-size: 30px; font-weight: 600; line-height: 1.25; margin: 36px 0 0; max-width: 420px; }
+.login-art { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
+.login-art img { width: 100%; max-width: 480px; height: auto; max-height: 100%; }
+.login-foot { margin: 0; font-size: 13px; color: #E3ECF8; }
+.login-side { flex: 1 1 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; }
+.login-side .auth-card { width: 100%; }
+.login-logo-small { display: none; color: var(--blue); margin-bottom: 20px; min-width: 0; }
+.login-logo-small span { color: var(--green); }
+.login-note { font-size: 13px; color: var(--grey-mid); margin: 14px 0 0; }
+.login-careers { text-align: center; font-size: 14px; color: var(--grey-mid); margin: 18px 0 0; }
+.login-careers a { color: var(--green); font-weight: 600; text-decoration: none; }
+.login-careers a:hover { text-decoration: underline; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 44px !important; }
+.toggle-password {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; padding: 6px; color: var(--grey-mid); cursor: pointer; border-radius: 4px; line-height: 0;
+}
+.toggle-password:hover, .toggle-password[aria-pressed="true"] { color: var(--blue); }
+.caps-warning { color: var(--amber-text); font-size: 13px; margin: 4px 0 0; }
+.forgot { margin: -6px 0 16px; text-align: right; font-size: 14px; }
+.forgot summary { color: var(--blue); cursor: pointer; list-style: none; display: inline; }
+.forgot summary::-webkit-details-marker { display: none; }
+.forgot p { text-align: right; }
 
 /* ---------- Small screens (NFR-33) ---------- */
 @media (max-width: 900px) {
@@ -214,6 +247,8 @@ h2 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; }
   .search, .user-text { display: none; }
   .logo { min-width: 0; }
   .content { padding: 16px; }
+  .login-brand { display: none; }
+  .login-logo-small { display: inline; }
 }
 
 /* ---------- Filter bar and table actions ---------- */
