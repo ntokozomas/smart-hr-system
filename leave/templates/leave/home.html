@@ -20,6 +20,64 @@
 
 {% block content %}
 
+{% if leave_balances %}
+<div class="card">
+    <h2>My Leave Balances</h2>
+
+    <p>
+        Your leave entitlement, approved leave taken and remaining
+        balance for {{ leave_balances.0.year }}.
+    </p>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Leave Type</th>
+                    <th>Entitlement (Days)</th>
+                    <th>Used (Days)</th>
+                    <th>Remaining (Days)</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for balance in leave_balances %}
+                    <tr>
+                        <td>{{ balance.get_leave_type_display }}</td>
+
+                        <td>
+                            {{ balance.entitlement|floatformat:"-1" }}
+                        </td>
+
+                        <td>
+                            {{ balance.used_days|floatformat:"-1" }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ balance.remaining_days|floatformat:"-1" }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% elif can_apply %}
+<div class="card">
+    <h2>My Leave Balances</h2>
+
+    <p>
+        No leave balances have been configured for your account
+        for the current year. Please contact HR to have your
+        leave entitlements added.
+    </p>
+</div>
+{% endif %}
+
+
 <div class="card">
     <h2>Leave Applications</h2>
 
@@ -38,6 +96,7 @@
                         <th>Days</th>
                         <th>Status</th>
                         <th>Date Submitted</th>
+
                         {% if can_approve %}
                             <th>Action</th>
                         {% endif %}
