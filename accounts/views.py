@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
+from analytics.dashboard import dashboard_context
 from .context_processors import visible_menu
 from .forms import LoginForm, ProfileForm
 
@@ -46,7 +47,10 @@ def dashboard(request):
         for item in group["items"]
         if item["url"] and item["label"] not in ("Dashboard", "Help")
     ]
-    return render(request, "dashboard.html", {"shortcuts": shortcuts})
+    context = {"shortcuts": shortcuts}
+    context.update(dashboard_context(request))
+    return render(request, "dashboard.html", context)
+
 
 
 def help_page(request):
