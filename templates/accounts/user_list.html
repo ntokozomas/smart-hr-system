@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Users & roles{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Users &amp; roles{% endblock %}
+{% block page_title %}Users &amp; roles{% endblock %}
+{% block page_actions %}
+  <a class="btn btn-secondary" href="{% url 'accounts:roles' %}">Role permissions</a>
+  <a class="btn btn-primary" href="{% url 'accounts:user_create' %}">+ Add user</a>
+{% endblock %}
+{% block content %}
+<form class="filter-bar" method="get">
+  <input type="search" name="q" value="{{ query }}" placeholder="Search username, name or email" aria-label="Search users">
+  <select name="role" aria-label="Role">
+    <option value="">All roles</option>
+    {% for role in roles %}<option value="{{ role.role_name }}"{% if role.role_name == selected_role %} selected{% endif %}>{{ role.role_name }}</option>{% endfor %}
+  </select>
+  <select name="status" aria-label="Status">
+    <option value="">Active and inactive</option>
+    <option value="active"{% if selected_status == "active" %} selected{% endif %}>Active</option>
+    <option value="inactive"{% if selected_status == "inactive" %} selected{% endif %}>Inactive</option>
+  </select>
+  <button class="btn btn-secondary" type="submit">Filter</button>
+</form>
+
+{% if page_obj.object_list %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>User</th><th>Role</th><th>Employee no.</th><th>Status</th><th>Last login</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for account in page_obj %}
+      <tr>
+        <td><strong>{{ account.first_name }} {{ account.last_name }}</strong><br><span class="help-text">{{ account.username }} · {{ account.email }}</span></td>
+        <td>{{ account.role.role_name }}</td>
+        <td class="nowrap">{% if account.employee %}{{ account.employee.employee_number }}{% else %}<span class="help-text">Not linked</span>{% endif %}</td>
+        <td>
+          {% if account.is_active %}{% status_badge "Active" %}{% else %}{% status_badge "Inactive" %}{% endif %}
+          {% if account.locked_until and account.locked_until > now %}{% status_badge "Locked" %}{% endif %}
+        </td>
+        <td class="nowrap">{% if account.last_login %}{{ account.last_login|date:"d M Y" }}{% else %}<span class="help-text">Never</span>{% endif %}</td>
+        <td class="row-actions">
+          <a href="{% url 'accounts:user_edit' account.pk %}">Edit</a>
+          <a href="{% url 'accounts:user_reset_password' account.pk %}">Reset password</a>
+          {% if account.pk != request.user.pk %}
+          <form method="post" action="{% url 'accounts:user_toggle_active' account.pk %}" onsubmit="return confirm('{% if account.is_active %}Deactivate{% else %}Reactivate{% endif %} {{ account.username|escapejs }}?');">
+            {% csrf_token %}
+            <button type="submit" class="link-button{% if account.is_active %} danger{% endif %}">{% if account.is_active %}Deactivate{% else %}Reactivate{% endif %}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  {% include "partials/empty_state.html" with message="No accounts match these filters." %}
+{% endif %}
+{% endblock %}

@@ -7,13 +7,21 @@ from .menu import MENU
 from .permissions import has_any_permission, permission_codes, role_name
 
 
-def _is_active(request, url_name):
-    match = getattr(request, "resolver_match", None)
-    if match is None:
-        return False
-    if ":" in url_name:
-        return match.namespace == url_name.split(":", 1)[0]
-    return match.view_name == url_name
+def _mark_active(request, groups):
+    """Highlight the menu item for the current page: the item whose address is the
+    longest match for the current address (so /leave/apply/ highlights Leave)."""
+    path = request.path
+    best, best_len = None, 0
+    for group in groups:
+        for item in group["items"]:
+            url = item["url"]
+            if not url:
+                continue
+            matches = path == url or (url != "/" and path.startswith(url))
+            if matches and len(url) > best_len:
+                best, best_len = item, len(url)
+    if best is not None:
+        best["active"] = True
 
 
 def visible_menu(request):
@@ -32,11 +40,10 @@ def visible_menu(request):
                 if settings.DEBUG:
                     visible.append({"label": label, "url": None, "active": False})
                 continue
-            visible.append(
-                {"label": label, "url": url, "active": _is_active(request, url_name)}
-            )
+            visible.append({"label": label, "url": url, "active": False})
         if visible:
             groups.append({"label": group_label, "items": visible})
+    _mark_active(request, groups)
     return groups
 
 
@@ -52,7 +59,10 @@ def navigation(request):
         profile_url = reverse("accounts:profile")
     except NoReverseMatch:
         profile_url = None
+    unread = user.notifications.filter(is_read=False)
     return {
+        "unread_count": unread.count(),
+        "recent_notifications": user.notifications.all()[:5],
         "user_role": role_name(user) or ("Superuser" if user.is_superuser else ""),
         "smart_perms": permission_codes(user),
         "menu_groups": visible_menu(request),

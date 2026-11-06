@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Audit log{% endblock %}
+{% block page_title %}Audit log{% endblock %}
+{% block content %}
+<form class="filter-bar" method="get">
+  <input type="search" name="q" value="{{ query }}" placeholder="Search user or description" aria-label="Search">
+  <select name="action" aria-label="Action">
+    <option value="">All actions</option>
+    {% for value, label in actions %}<option value="{{ value }}"{% if value == selected_action %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <label class="inline-label">From <input type="date" name="from" value="{{ date_from }}"></label>
+  <label class="inline-label">To <input type="date" name="to" value="{{ date_to }}"></label>
+  <button class="btn btn-secondary" type="submit">Filter</button>
+</form>
+{% if page_obj.object_list %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>Date and time</th><th>User</th><th>Action</th><th>Record</th><th>Details</th><th>IP address</th></tr></thead>
+    <tbody>
+      {% for entry in page_obj %}
+      <tr>
+        <td>{{ entry.created_at|date:"d M Y H:i:s" }}</td>
+        <td>{{ entry.username|default:"System" }}</td>
+        <td>{{ entry.action }}</td>
+        <td>{% if entry.record_type %}{{ entry.record_type }} #{{ entry.record_id }}{% endif %}</td>
+        <td>{{ entry.description }}</td>
+        <td>{{ entry.ip_address|default:"" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  {% include "partials/empty_state.html" with message="No audit entries match these filters." %}
+{% endif %}
+<p class="help-text">Entries are written by the system and cannot be edited or deleted.</p>
+{% endblock %}

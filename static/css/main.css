@@ -80,6 +80,32 @@ h2 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; }
 }
 .user-menu .menu a:hover, .user-menu .menu button:hover { background: var(--grey-light); }
 
+/* ---------- Notification bell (FR-17) ---------- */
+.bell-menu { position: relative; margin-left: auto; }
+.bell-menu + .user-menu { margin-left: 0; }
+.bell-menu summary { list-style: none; cursor: pointer; display: flex; align-items: center; position: relative; padding: 6px; color: #fff; }
+.bell-menu summary::-webkit-details-marker { display: none; }
+.bell-count {
+  position: absolute; top: -2px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: var(--green); color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.bell-menu .menu {
+  position: absolute; right: 0; top: 44px; background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); z-index: 20;
+}
+.notes-menu { width: 320px; padding: 0; overflow: hidden; }
+.notes-head { padding: 10px 14px; font-weight: 600; border-bottom: 1px solid var(--line); color: var(--grey-dark); }
+.note { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; color: var(--grey-dark); text-decoration: none; border-bottom: 1px solid var(--line); font-size: 14px; }
+.note:hover { background: var(--grey-light); }
+.note.unread { background: var(--blue-light); }
+.note.unread span:first-child { font-weight: 600; }
+.note-time { font-size: 12px; color: var(--grey-mid); }
+.note-empty { padding: 14px; margin: 0; color: var(--grey-mid); font-size: 14px; }
+.notes-all { display: block; padding: 10px 14px; text-align: center; font-size: 14px; color: var(--blue); text-decoration: none; }
+.note-list { padding: 0; overflow: hidden; }
+.note-list .note:last-child { border-bottom: 0; }
+
 /* ---------- Layout and sidebar ---------- */
 .layout { display: flex; min-height: calc(100vh - 56px); }
 .sidebar { width: 230px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line); padding: 16px 10px; }
@@ -189,3 +215,19 @@ h2 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; }
   .logo { min-width: 0; }
   .content { padding: 16px; }
 }
+
+/* ---------- Filter bar and table actions ---------- */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.filter-bar input, .filter-bar select {
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 14px; background: #fff;
+}
+.filter-bar input[type=search] { min-width: 240px; }
+.inline-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--grey-mid); }
+.row-actions { white-space: nowrap; }
+.row-actions a, .row-actions form { display: inline; margin-right: 10px; font-size: 14px; }
+.link-button { background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--blue); cursor: pointer; text-decoration: underline; }
+.link-button.danger { color: var(--red); }
+.matrix .center { text-align: center; }
+.tick { color: var(--green); font-weight: 700; }
+.dash { color: #A9B0B8; }
+.nowrap { white-space: nowrap; }

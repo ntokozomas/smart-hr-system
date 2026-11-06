@@ -85,6 +85,10 @@ class User(AbstractUser):
         blank=True,
     )
 
+    # Login lockout (Design 4.8.1): 5 failed attempts lock the account for 15 minutes.
+    failed_login_attempts = models.PositiveSmallIntegerField(default=0)
+    locked_until = models.DateTimeField(blank=True, null=True)
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
@@ -151,3 +155,65 @@ class UserPermission(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user} - {self.permission}"
+
+
+class AuditLog(models.Model):
+    """Security-relevant events (Design 4.8.4). Written by the system, never edited."""
+
+    class Action(models.TextChoices):
+        LOGIN = "Login", "Login"
+        LOGIN_FAILED = "Login failed", "Login failed"
+        LOCKED = "Account locked", "Account locked"
+        LOGOUT = "Logout", "Logout"
+        CREATE = "Create", "Create"
+        UPDATE = "Update", "Update"
+        DEACTIVATE = "Deactivate", "Deactivate"
+        ACTIVATE = "Activate", "Activate"
+        ROLE_CHANGE = "Role change", "Role change"
+        PASSWORD_RESET = "Password reset", "Password reset"
+        LEAVE_DECISION = "Leave decision", "Leave decision"
+        EXPORT = "Export", "Export"
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="audit_entries",
+        null=True,
+        blank=True,
+    )
+    username = models.CharField(max_length=150, blank=True)  # kept even if the user is deleted
+    action = models.CharField(max_length=30, choices=Action.choices)
+    record_type = models.CharField(max_length=50, blank=True)
+    record_id = models.CharField(max_length=50, blank=True)
+    description = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["action", "created_at"])]
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.username} {self.action}"
+
+
+class Notification(models.Model):
+    """In-app notification shown under the bell in the top bar (FR-17)."""
+
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    message = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["recipient", "is_read"])]
+
+    def __str__(self):
+        return f"To {self.recipient}: {self.message}"
+

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_actions %}
+  {% if unread_count %}
+  <form method="post" action="{% url 'accounts:notification_read_all' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Mark all as read</button></form>
+  {% endif %}
+{% endblock %}
+{% block content %}
+{% if page_obj.object_list %}
+<div class="card note-list">
+  {% for note in page_obj %}
+    <a class="note{% if not note.is_read %} unread{% endif %}" href="{% url 'accounts:notification_open' note.pk %}">
+      <span>{{ note.message }}</span>
+      <span class="note-time">{{ note.created_at|date:"d M Y H:i" }}</span>
+    </a>
+  {% endfor %}
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  {% include "partials/empty_state.html" with message="You have no notifications yet." %}
+{% endif %}
+{% endblock %}
