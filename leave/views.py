@@ -1,6 +1,7 @@
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -355,16 +356,34 @@ def attendance(request):
             employee__department_id=int(selected_department)
         )
 
-    # Filter by starting date.
-    parsed_date_from = parse_date(date_from) if date_from else None
+    # Filter by starting date. Handle impossible dates safely.
+    try:
+        parsed_date_from = parse_date(date_from) if date_from else None
+    except ValueError:
+        parsed_date_from = None
+
+    if date_from and parsed_date_from is None:
+        messages.error(
+            request,
+            "Please enter a valid starting date in YYYY-MM-DD format.",
+        )
 
     if parsed_date_from:
         attendance_records = attendance_records.filter(
             date__gte=parsed_date_from
         )
 
-    # Filter by ending date.
-    parsed_date_to = parse_date(date_to) if date_to else None
+    # Filter by ending date. Handle impossible dates safely.
+    try:
+        parsed_date_to = parse_date(date_to) if date_to else None
+    except ValueError:
+        parsed_date_to = None
+
+    if date_to and parsed_date_to is None:
+        messages.error(
+            request,
+            "Please enter a valid ending date in YYYY-MM-DD format.",
+        )
 
     if parsed_date_to:
         attendance_records = attendance_records.filter(
@@ -376,6 +395,11 @@ def attendance(request):
         attendance_records = attendance_records.filter(
             status=selected_status
         )
+
+    # Paginate attendance history: 20 records per page.
+    paginator = Paginator(attendance_records, 20)
+    page_number = request.GET.get("page")
+    attendance_records = paginator.get_page(page_number)
 
     today_record = None
 

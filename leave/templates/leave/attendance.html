@@ -14,15 +14,10 @@
 
 <div class="card">
     <h2>Today's Attendance</h2>
-
-    <p>
-        Record your daily arrival and departure times using the buttons below.
-    </p>
+    <p>Record your daily arrival and departure times using the buttons below.</p>
 
     {% if can_record %}
-
         {% if today_record %}
-
             <p>
                 <strong>Check-in time:</strong>
                 {{ today_record.check_in_time|time:"H:i"|default:"Not recorded" }}
@@ -34,181 +29,121 @@
             </p>
 
             {% if not today_record.check_in_time %}
-
                 <form method="post">
                     {% csrf_token %}
-                    <button
-                        type="submit"
-                        name="action"
-                        value="check_in"
-                        class="btn btn-primary">
-                        Check In
-                    </button>
+                    <input type="hidden" name="action" value="check_in">
+                    <button type="submit" class="btn btn-primary">Check In</button>
                 </form>
 
             {% elif not today_record.check_out_time %}
-
                 <form method="post">
                     {% csrf_token %}
-                    <button
-                        type="submit"
-                        name="action"
-                        value="check_out"
-                        class="btn btn-success">
-                        Check Out
-                    </button>
+                    <input type="hidden" name="action" value="check_out">
+                    <button type="submit" class="btn btn-primary">Check Out</button>
                 </form>
 
             {% else %}
-
                 <div class="alert alert-warning">
                     Your attendance for today has been completed.
                 </div>
-
             {% endif %}
 
         {% else %}
-
             <p>You have not recorded your attendance today.</p>
 
             <form method="post">
                 {% csrf_token %}
-                <button
-                    type="submit"
-                    name="action"
-                    value="check_in"
-                    class="btn btn-primary">
-                    Check In
-                </button>
+                <input type="hidden" name="action" value="check_in">
+                <button type="submit" class="btn btn-primary">Check In</button>
             </form>
-
         {% endif %}
 
     {% else %}
-
         <p>Attendance recording is not available for this account.</p>
-
     {% endif %}
 </div>
 
-
 <div class="card">
-
     <h2>Attendance History</h2>
-
     <p>View and filter recorded employee attendance information.</p>
 
-    <!-- Attendance filters -->
     <form method="get" action="{% url 'leave:attendance' %}">
+        <div class="filter-bar">
 
-        <div class="filter-section">
-
-            <div class="form-group">
+            <div>
                 <label for="employee">Employee</label>
-
                 <select name="employee" id="employee">
                     <option value="">All Employees</option>
-
-                    {% for option in employee_options %}
-                        <option
-                            value="{{ option.employee_id }}"
-                            {% if selected_employee == option.employee_id|stringformat:"s" %}selected{% endif %}>
-                            {{ option.employee__first_name }}
-                            {{ option.employee__last_name }}
+                    {% for employee in employee_options %}
+                        <option value="{{ employee.employee_id }}"
+                            {% if selected_employee == employee.employee_id|stringformat:"s" %}selected{% endif %}>
+                            {{ employee.employee__first_name }}
+                            {{ employee.employee__last_name }}
                         </option>
                     {% endfor %}
-
                 </select>
             </div>
 
-
-            <div class="form-group">
+            <div>
                 <label for="department">Department</label>
-
                 <select name="department" id="department">
                     <option value="">All Departments</option>
-
-                    {% for option in department_options %}
-                        <option
-                            value="{{ option.employee__department_id }}"
-                            {% if selected_department == option.employee__department_id|stringformat:"s" %}selected{% endif %}>
-                            {{ option.employee__department__department_name }}
+                    {% for department in department_options %}
+                        <option value="{{ department.employee__department_id }}"
+                            {% if selected_department == department.employee__department_id|stringformat:"s" %}selected{% endif %}>
+                            {{ department.employee__department__department_name }}
                         </option>
                     {% endfor %}
-
                 </select>
             </div>
 
-
-            <div class="form-group">
-                <label for="date_from">Date From</label>
-
-                <input
-                    type="date"
-                    name="date_from"
-                    id="date_from"
-                    value="{{ date_from }}">
+            <div>
+                <label for="date_from">From Date</label>
+                <input type="date"
+                       name="date_from"
+                       id="date_from"
+                       value="{{ date_from }}">
             </div>
 
-
-            <div class="form-group">
-                <label for="date_to">Date To</label>
-
-                <input
-                    type="date"
-                    name="date_to"
-                    id="date_to"
-                    value="{{ date_to }}">
+            <div>
+                <label for="date_to">To Date</label>
+                <input type="date"
+                       name="date_to"
+                       id="date_to"
+                       value="{{ date_to }}">
             </div>
 
-
-            <div class="form-group">
-                <label for="status">Attendance Status</label>
-
+            <div>
+                <label for="status">Status</label>
                 <select name="status" id="status">
                     <option value="">All Statuses</option>
-
                     {% for status_value, status_label in attendance_statuses %}
-                        <option
-                            value="{{ status_value }}"
+                        <option value="{{ status_value }}"
                             {% if selected_status == status_value %}selected{% endif %}>
                             {{ status_label }}
                         </option>
                     {% endfor %}
-
                 </select>
             </div>
 
-        </div>
+            <div>
+                <button type="submit" class="btn btn-primary">
+                    Apply Filters
+                </button>
 
-
-        <div class="filter-actions">
-
-            <button type="submit" class="btn btn-primary">
-                Apply Filters
-            </button>
-
-            <a
-                href="{% url 'leave:attendance' %}"
-                class="btn btn-secondary">
-                Clear Filters
-            </a>
+                <a href="{% url 'leave:attendance' %}" class="btn btn-secondary">
+                    Clear Filters
+                </a>
+            </div>
 
         </div>
-
     </form>
-
 
     <hr>
 
-
-    <!-- Attendance records table -->
     {% if attendance_records %}
-
         <div class="table-wrap">
-
             <table class="data-table">
-
                 <thead>
                     <tr>
                         <th>Employee</th>
@@ -221,52 +156,41 @@
                 </thead>
 
                 <tbody>
-
                     {% for record in attendance_records %}
-
                         <tr>
-
                             <td>
                                 {{ record.employee.first_name }}
                                 {{ record.employee.last_name }}
                             </td>
 
                             <td>
-                                {{ record.employee.department.department_name }}
+                                {{ record.employee.department.department_name|default:"-" }}
+                            </td>
+
+                            <td>{{ record.date|date:"d M Y" }}</td>
+
+                            <td>
+                                {{ record.check_in_time|time:"H:i"|default:"-" }}
                             </td>
 
                             <td>
-                                {{ record.date|date:"d M Y" }}
-                            </td>
-
-                            <td>
-                                {{ record.check_in_time|time:"H:i"|default:"—" }}
-                            </td>
-
-                            <td>
-                                {{ record.check_out_time|time:"H:i"|default:"—" }}
+                                {{ record.check_out_time|time:"H:i"|default:"-" }}
                             </td>
 
                             <td>
                                 {% status_badge record.status %}
                             </td>
-
                         </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
 
+        {% include "partials/pagination.html" with page_obj=attendance_records %}
+
     {% else %}
-
         {% include "partials/empty_state.html" with message="No attendance records match your selected filters." %}
-
     {% endif %}
-
 </div>
 
 {% endblock %}
