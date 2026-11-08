@@ -1,0 +1,23 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+media/
+staticfiles/
+.DS_Store
+
+# Local development and generated files
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.coverage
+coverage.json
+coverage.xml
+htmlcov/
+.ruff_cache/
+*.backup_*
+*.save
+
+# Private applicant CV uploads
+private_uploads/

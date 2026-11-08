@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Recruitment{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> / Recruitment{% endblock %}
+{% block page_title %}Recruitment{% endblock %}
+{% block page_actions %}
+<a class="btn btn-primary" href="{% url 'recruitment:vacancy_create' %}">Create vacancy</a>
+<a class="btn btn-secondary" href="{% url 'recruitment:application_list' %}">View applications</a>
+{% endblock %}
+{% block content %}
+<div class="stat-grid">
+  <section class="card stat-card"><div class="stat-label">Total vacancies</div><div class="stat-value">{{ total_vacancies }}</div></section>
+  <section class="card stat-card green"><div class="stat-label">Open vacancies</div><div class="stat-value">{{ open_vacancies }}</div></section>
+  <section class="card stat-card amber"><div class="stat-label">Applications received</div><div class="stat-value">{{ total_applications }}</div></section>
+  <section class="card stat-card grey"><div class="stat-label">Applications in progress</div><div class="stat-value">{{ pending_applications }}</div></section>
+</div>
+
+<h2>Application pipeline</h2>
+<div class="shortcut-grid">
+{% for stage in stage_counts %}
+  <div class="card"><strong>{{ stage.status }}</strong><div class="stat-value">{{ stage.total }}</div></div>
+{% empty %}
+  <div class="empty-state">No applications have been received yet.</div>
+{% endfor %}
+</div>
+
+<h2>Recently posted vacancies</h2>
+{% if recent_vacancies %}
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Vacancy</th><th>Department</th><th>Posted</th><th>Status</th><th></th></tr></thead>
+<tbody>{% for vacancy in recent_vacancies %}
+<tr>
+<td>{{ vacancy.title }}</td><td>{{ vacancy.department }}</td>
+<td>{{ vacancy.date_posted|date:"d M Y" }}</td>
+<td><span class="badge {% if vacancy.status == 'Open' %}ok{% else %}neutral{% endif %}">{{ vacancy.status }}</span></td>
+<td><a href="{% url 'recruitment:vacancy_edit' vacancy.pk %}">Edit</a></td>
+</tr>
+{% endfor %}</tbody></table></div>
+{% else %}<div class="empty-state">No vacancies have been created yet.</div>{% endif %}
+
+<h2>Recruitment shortcuts</h2>
+<div class="card shortcut-grid">
+<a class="shortcut" href="{% url 'recruitment:vacancy_list' %}">Manage vacancies →</a>
+<a class="shortcut" href="{% url 'recruitment:application_list' %}">Manage applications →</a>
+<a class="shortcut" href="{% url 'recruitment:careers' %}" target="_blank">View public Careers page →</a>
+<a class="shortcut" href="{% url 'recruitment:application_status' %}" target="_blank">Application status lookup →</a>
+</div>
+{% endblock %}

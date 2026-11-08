@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Vacancies{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> / <a href="{% url 'recruitment:home' %}">Recruitment</a> / Vacancies{% endblock %}
+{% block page_title %}Manage vacancies{% endblock %}
+{% block page_actions %}<a class="btn btn-primary" href="{% url 'recruitment:vacancy_create' %}">Create vacancy</a>{% endblock %}
+{% block content %}
+<form method="get" class="card" style="margin-bottom:16px">
+<label class="label" for="vacancy-search">Search vacancies</label>
+<input id="vacancy-search" type="search" name="q" value="{{ query }}" placeholder="Search title or description">
+<button class="btn btn-secondary" type="submit">Search</button>
+{% if query %}<a href="{% url 'recruitment:vacancy_list' %}">Clear</a>{% endif %}
+</form>
+{% if page_obj.object_list %}
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Vacancy</th><th>Department</th><th>Position</th><th>Posted</th><th>Closing</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>{% for vacancy in page_obj %}
+<tr>
+<td>{{ vacancy.title }}</td><td>{{ vacancy.department }}</td><td>{{ vacancy.position }}</td>
+<td>{{ vacancy.date_posted|date:"d M Y" }}</td>
+<td>{{ vacancy.closing_date|date:"d M Y"|default:"Not specified" }}</td>
+<td><span class="badge {% if vacancy.status == 'Open' %}ok{% else %}neutral{% endif %}">{{ vacancy.status }}</span></td>
+<td>
+<a href="{% url 'recruitment:vacancy_edit' vacancy.pk %}">Edit</a>
+<form method="post" action="{% url 'recruitment:vacancy_toggle_status' vacancy.pk %}" style="display:inline">
+{% csrf_token %}
+<button class="btn btn-secondary" type="submit">{% if vacancy.status == 'Open' %}Close{% else %}Reopen{% endif %}</button>
+</form>
+</td>
+</tr>{% endfor %}</tbody></table></div>
+<div class="pagination"><span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span><div class="pages">
+{% if page_obj.has_previous %}<a href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+{% if page_obj.has_next %}<a href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</div></div>
+{% else %}<div class="empty-state">No vacancies found.</div>{% endif %}
+{% endblock %}

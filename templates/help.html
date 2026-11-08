@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Help{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Help{% endblock %}
+{% block page_title %}Help{% endblock %}
+{% block content %}
+<div class="card prose">
+  <p>The menu on the left only shows the sections your role ({{ user_role }}) can use.</p>
+  <dl>
+    <dt>Employees</dt><dd>Find, add and update employee records. Managers see their own department.</dd>
+    <dt>My Profile</dt><dd>See your details and update your phone number, address and email.</dd>
+    <dt>Leave</dt><dd>Apply for leave and see your balance. Managers approve requests and see clashes with other approved leave.</dd>
+    <dt>Attendance</dt><dd>Check in when you arrive and check out when you leave.</dd>
+    <dt>Recruitment</dt><dd>Manage vacancies and follow applicants through each stage.</dd>
+    <dt>Onboarding &amp; Exit</dt><dd>Track new starters' tasks and record employees who leave.</dd>
+    <dt>Performance</dt><dd>Managers record reviews; employees see their completed reviews.</dd>
+    <dt>Reports</dt><dd>Dashboards, trends and exports to PDF or CSV.</dd>
+  </dl>
+  <p>For a new account, a forgotten password or a wrong role, contact the Administrator.</p>
+</div>
+{% endblock %}

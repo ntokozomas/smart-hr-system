@@ -1,0 +1,12 @@
+<nav class="sidebar" aria-label="Main menu">
+  {% for group in menu_groups %}
+    <div class="nav-group">{{ group.label }}</div>
+    {% for item in group.items %}
+      {% if item.url %}
+        <a class="nav-item{% if item.active %} active{% endif %}" href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+      {% else %}
+        <span class="nav-item disabled" title="Not built yet">{{ item.label }}</span>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</nav>

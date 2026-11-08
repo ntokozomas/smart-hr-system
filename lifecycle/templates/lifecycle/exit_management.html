@@ -1,0 +1,93 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>Employee Exit Management</h2>
+
+        <a href="{% url 'lifecycle:create_exit' %}"
+           class="btn btn-primary">
+            + Add Employee Exit
+        </a>
+
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <table class="table table-striped table-hover">
+
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Exit Type</th>
+                        <th>Exit Date</th>
+                        <th>Reason</th>
+                        <th>Procedures Completed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for exit_record in exit_records %}
+
+                    <tr>
+
+                        <td>
+                            {{ exit_record.employee.first_name }}
+                            {{ exit_record.employee.last_name }}
+                        </td>
+
+                        <td>{{ exit_record.exit_type }}</td>
+
+                        <td>{{ exit_record.exit_date }}</td>
+
+                        <td>{{ exit_record.reason|default:"-" }}</td>
+
+                        <td>
+                            {% if exit_record.procedures_completed %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">No</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'lifecycle:edit_exit' exit_record.pk %}"
+                               class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+
+                            <a href="{% url 'lifecycle:delete_exit' exit_record.pk %}"
+                               class="btn btn-sm btn-danger">
+                                Delete
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            No employee exit records found.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

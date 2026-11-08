@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h2>Delete Performance Review</h2>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                Are you sure you want to delete this performance review?
+            </p>
+
+            <p>
+                <strong>Employee:</strong>
+                {{ performance_record.employee.first_name }}
+                {{ performance_record.employee.last_name }}
+            </p>
+
+            <p>
+                <strong>Review Period:</strong>
+                {{ performance_record.review_period }}
+            </p>
+
+            <p>
+                <strong>Rating:</strong>
+                {{ performance_record.rating }} / 5
+            </p>
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Confirm Delete
+                </button>
+
+                <a href="{% url 'performance:home' %}"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

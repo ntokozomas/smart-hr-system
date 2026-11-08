@@ -1,0 +1,32 @@
+
+{% extends "base.html" %}
+
+{% block title %}Apply for Leave{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}">Dashboard</a> ›
+<a href="{% url 'leave:home' %}">Leave</a> › Apply
+{% endblock %}
+
+{% block page_title %}Apply for Leave{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Leave Application</h2>
+
+    <p>
+        Complete the form below to submit your leave application.
+        Your requested working days will exclude weekends
+        and South African public holidays.
+    </p>
+
+    <p class="help-text">
+        Your application will be submitted with Pending status
+        for review by an authorised manager or HR officer.
+    </p>
+</div>
+
+{% include "partials/form.html" with form=form submit_label="Submit Leave Application" cancel_url="/leave/" %}
+
+{% endblock %}
