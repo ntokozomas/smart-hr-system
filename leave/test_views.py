@@ -304,7 +304,7 @@ class LeaveViewTests(TestCase):
 
 
 class AttendanceViewTests(TestCase):
-    """Test employee attendance recording and access restrictions."""
+    """Test attendance recording, filtering, pagination and access restrictions."""
 
     def setUp(self):
         self.department = Department.objects.create(department_name="IT Department")
@@ -316,21 +316,23 @@ class AttendanceViewTests(TestCase):
         self.employee = self.create_employee(
             "Alice", "alice@example.com", self.department
         )
+        self.colleague = self.create_employee(
+            "Charlie", "charlie@example.com", self.department
+        )
         self.other_employee = self.create_employee(
             "Bob", "bob@example.com", self.other_department
         )
-
-        role = Role.objects.get(role_name="Employee")
-
-        self.employee_user = User.objects.create_user(
-            username="attendance_employee",
-            email="attendance@example.com",
-            password="TestPass123!",
-            first_name="Alice",
-            last_name="Tester",
-            role=role,
-            employee=self.employee,
+        self.manager_employee = self.create_employee(
+            "David", "david@example.com", self.department
         )
+
+        self.employee_user = self.create_user(
+            "attendance_employee", "Employee", self.employee
+        )
+        self.manager_user = self.create_user(
+            "attendance_manager", "Manager", self.manager_employee
+        )
+        self.hr_user = self.create_user("attendance_hr", "HR Officer")
 
     def create_employee(self, first_name, email, department):
         return Employee.objects.create(
@@ -341,6 +343,32 @@ class AttendanceViewTests(TestCase):
             date_joined=date(2020, 1, 1),
             department=department,
             position=self.position,
+        )
+
+    def create_user(self, username, role_name, employee=None):
+        role = Role.objects.get(role_name=role_name)
+
+        return User.objects.create_user(
+            username=username,
+            email=f"{username}@example.com",
+            password="TestPass123!",
+            first_name=username,
+            last_name="Tester",
+            role=role,
+            employee=employee,
+        )
+
+    def create_attendance(
+        self,
+        employee,
+        attendance_date,
+        status=Attendance.Status.PRESENT,
+    ):
+        return Attendance.objects.create(
+            employee=employee,
+            date=attendance_date,
+            check_in_time=time(8, 0),
+            status=status,
         )
 
     def test_employee_can_check_in(self):
@@ -442,19 +470,8 @@ class AttendanceViewTests(TestCase):
         )
 
     def test_employee_sees_only_own_attendance_records(self):
-        own_record = Attendance.objects.create(
-            employee=self.employee,
-            date=date(2026, 11, 2),
-            check_in_time=time(8, 0),
-            status=Attendance.Status.PRESENT,
-        )
-
-        Attendance.objects.create(
-            employee=self.other_employee,
-            date=date(2026, 11, 2),
-            check_in_time=time(8, 0),
-            status=Attendance.Status.PRESENT,
-        )
+        own_record = self.create_attendance(self.employee, date(2026, 11, 2))
+        self.create_attendance(self.other_employee, date(2026, 11, 2))
 
         self.client.force_login(self.employee_user)
 
@@ -466,3 +483,152 @@ class AttendanceViewTests(TestCase):
 
         self.assertEqual(len(visible_records), 1)
         self.assertEqual(visible_records[0].pk, own_record.pk)
+
+    def test_hr_officer_can_filter_attendance_by_employee(self):
+        alice_record = self.create_attendance(self.employee, date(2026, 11, 2))
+        self.create_attendance(self.other_employee, date(2026, 11, 2))
+
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"employee": str(self.employee.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["attendance_records"])
+        self.assertEqual([record.pk for record in records], [alice_record.pk])
+
+    def test_hr_officer_can_filter_attendance_by_department(self):
+        it_record = self.create_attendance(self.employee, date(2026, 11, 2))
+        self.create_attendance(self.other_employee, date(2026, 11, 2))
+
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"department": str(self.department.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["attendance_records"])
+        self.assertEqual([record.pk for record in records], [it_record.pk])
+
+    def test_hr_officer_can_filter_attendance_by_date_range(self):
+        earlier_record = self.create_attendance(
+            self.employee, date(2026, 11, 1)
+        )
+        selected_record = self.create_attendance(
+            self.colleague, date(2026, 11, 3)
+        )
+        self.create_attendance(self.other_employee, date(2026, 11, 5))
+
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {
+                "date_from": "2026-11-02",
+                "date_to": "2026-11-04",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["attendance_records"])
+        self.assertEqual([record.pk for record in records], [selected_record.pk])
+        self.assertNotIn(earlier_record, records)
+
+    def test_hr_officer_can_filter_attendance_by_status(self):
+        present_record = self.create_attendance(
+            self.employee,
+            date(2026, 11, 2),
+            Attendance.Status.PRESENT,
+        )
+        self.create_attendance(
+            self.other_employee,
+            date(2026, 11, 2),
+            Attendance.Status.LATE,
+        )
+
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"status": Attendance.Status.PRESENT},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["attendance_records"])
+        self.assertEqual([record.pk for record in records], [present_record.pk])
+
+    def test_impossible_start_date_does_not_cause_server_error(self):
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"date_from": "2026-02-30"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_impossible_end_date_does_not_cause_server_error(self):
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"date_to": "2026-02-30"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_manager_cannot_see_other_department_attendance(self):
+        own_record = self.create_attendance(self.employee, date(2026, 11, 2))
+        self.create_attendance(self.other_employee, date(2026, 11, 2))
+
+        self.client.force_login(self.manager_user)
+
+        response = self.client.get(reverse("leave:attendance"))
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["attendance_records"])
+        self.assertEqual([record.pk for record in records], [own_record.pk])
+
+    def test_manager_filter_cannot_show_other_department_records(self):
+        own_record = self.create_attendance(self.employee, date(2026, 11, 2))
+        self.create_attendance(self.other_employee, date(2026, 11, 2))
+
+        self.client.force_login(self.manager_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {"department": str(self.other_department.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["attendance_records"].paginator.count, 0)
+
+    def test_pagination_preserves_attendance_filters(self):
+        for day in range(1, 23):
+            self.create_attendance(
+                self.employee,
+                date(2026, 10, day),
+                Attendance.Status.PRESENT,
+            )
+
+        self.client.force_login(self.hr_user)
+
+        response = self.client.get(
+            reverse("leave:attendance"),
+            {
+                "status": Attendance.Status.PRESENT,
+                "date_from": "2026-10-01",
+                "date_to": "2026-10-31",
+                "page": "2",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["attendance_records"].number, 2)
+        self.assertContains(response, "status=Present")
+        self.assertContains(response, "date_from=2026-10-01")
+        self.assertContains(response, "date_to=2026-10-31")

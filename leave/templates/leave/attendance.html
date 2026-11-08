@@ -14,14 +14,9 @@
 
 <div class="card">
     <h2>Today's Attendance</h2>
-
-    <p>
-        Record your daily arrival and departure times using the
-        buttons below.
-    </p>
+    <p>Record your daily arrival and departure times using the buttons below.</p>
 
     {% if can_record %}
-
         {% if today_record %}
             <p>
                 <strong>Check-in time:</strong>
@@ -34,70 +29,119 @@
             </p>
 
             {% if not today_record.check_in_time %}
-
                 <form method="post">
                     {% csrf_token %}
-                    <button
-                        type="submit"
-                        name="action"
-                        value="check_in"
-                        class="btn btn-primary">
-                        Check In
-                    </button>
+                    <input type="hidden" name="action" value="check_in">
+                    <button type="submit" class="btn btn-primary">Check In</button>
                 </form>
 
             {% elif not today_record.check_out_time %}
-
                 <form method="post">
                     {% csrf_token %}
-                    <button
-                        type="submit"
-                        name="action"
-                        value="check_out"
-                        class="btn btn-success">
-                        Check Out
-                    </button>
+                    <input type="hidden" name="action" value="check_out">
+                    <button type="submit" class="btn btn-primary">Check Out</button>
                 </form>
 
             {% else %}
-
                 <div class="alert alert-warning">
                     Your attendance for today has been completed.
                 </div>
-
             {% endif %}
 
         {% else %}
-
             <p>You have not recorded your attendance today.</p>
 
             <form method="post">
                 {% csrf_token %}
-                <button
-                    type="submit"
-                    name="action"
-                    value="check_in"
-                    class="btn btn-primary">
-                    Check In
-                </button>
+                <input type="hidden" name="action" value="check_in">
+                <button type="submit" class="btn btn-primary">Check In</button>
             </form>
-
         {% endif %}
 
     {% else %}
-
         <p>Attendance recording is not available for this account.</p>
-
     {% endif %}
 </div>
 
 <div class="card">
     <h2>Attendance History</h2>
+    <p>View and filter recorded employee attendance information.</p>
 
-    <p>View recorded employee attendance information.</p>
+    <form method="get" action="{% url 'leave:attendance' %}">
+        <div class="filter-bar">
+
+            <div>
+                <label for="employee">Employee</label>
+                <select name="employee" id="employee">
+                    <option value="">All Employees</option>
+                    {% for employee in employee_options %}
+                        <option value="{{ employee.employee_id }}"
+                            {% if selected_employee == employee.employee_id|stringformat:"s" %}selected{% endif %}>
+                            {{ employee.employee__first_name }}
+                            {{ employee.employee__last_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="department">Department</label>
+                <select name="department" id="department">
+                    <option value="">All Departments</option>
+                    {% for department in department_options %}
+                        <option value="{{ department.employee__department_id }}"
+                            {% if selected_department == department.employee__department_id|stringformat:"s" %}selected{% endif %}>
+                            {{ department.employee__department__department_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="date_from">From Date</label>
+                <input type="date"
+                       name="date_from"
+                       id="date_from"
+                       value="{{ date_from }}">
+            </div>
+
+            <div>
+                <label for="date_to">To Date</label>
+                <input type="date"
+                       name="date_to"
+                       id="date_to"
+                       value="{{ date_to }}">
+            </div>
+
+            <div>
+                <label for="status">Status</label>
+                <select name="status" id="status">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_label in attendance_statuses %}
+                        <option value="{{ status_value }}"
+                            {% if selected_status == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">
+                    Apply Filters
+                </button>
+
+                <a href="{% url 'leave:attendance' %}" class="btn btn-secondary">
+                    Clear Filters
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+    <hr>
 
     {% if attendance_records %}
-
         <div class="table-wrap">
             <table class="data-table">
                 <thead>
@@ -120,19 +164,17 @@
                             </td>
 
                             <td>
-                                {{ record.employee.department.department_name }}
+                                {{ record.employee.department.department_name|default:"-" }}
+                            </td>
+
+                            <td>{{ record.date|date:"d M Y" }}</td>
+
+                            <td>
+                                {{ record.check_in_time|time:"H:i"|default:"-" }}
                             </td>
 
                             <td>
-                                {{ record.date|date:"d M Y" }}
-                            </td>
-
-                            <td>
-                                {{ record.check_in_time|time:"H:i"|default:"—" }}
-                            </td>
-
-                            <td>
-                                {{ record.check_out_time|time:"H:i"|default:"—" }}
+                                {{ record.check_out_time|time:"H:i"|default:"-" }}
                             </td>
 
                             <td>
@@ -144,10 +186,10 @@
             </table>
         </div>
 
+        {% include "partials/pagination.html" with page_obj=attendance_records %}
+
     {% else %}
-
-        {% include "partials/empty_state.html" with message="No attendance records are available yet." %}
-
+        {% include "partials/empty_state.html" with message="No attendance records match your selected filters." %}
     {% endif %}
 </div>
 
