@@ -56,7 +56,7 @@ def navigation(request):
     except NoReverseMatch:
         search_url = None
     try:
-        profile_url = reverse("accounts:profile")
+        profile_url = reverse("employees:my_profile")
     except NoReverseMatch:
         profile_url = None
     unread = user.notifications.filter(is_read=False)

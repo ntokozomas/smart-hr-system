@@ -1,11 +1,10 @@
-# Create your views here.
-
 """Employee records views (T3–T5)."""
 
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import EmployeeForm
+from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.permissions import (
     has_permission,
@@ -13,6 +12,7 @@ from accounts.permissions import (
     scope_queryset,
 )
 
+from .forms import EmployeeForm, EmployeeProfileForm
 from .models import Department, Employee
 
 
@@ -161,3 +161,57 @@ def employee_activate(request, pk):
     employee.save()
 
     return redirect("employees:list")
+
+
+@require_permission("profile.view_own")
+def my_profile(request):
+    """FR-11: View and update the logged-in employee's own profile."""
+
+    try:
+        employee = request.user.employee
+    except Employee.DoesNotExist:
+        employee = None
+
+    if employee is None:
+        return render(
+            request,
+            "employees/my_profile.html",
+            {"employee": None, "form": None},
+        )
+
+    if request.method == "POST":
+        form = EmployeeProfileForm(
+            request.POST,
+            instance=employee,
+            user=request.user,
+        )
+
+        if form.is_valid():
+            with transaction.atomic():
+                employee = form.save()
+
+                request.user.email = employee.email
+                request.user.save(
+                    update_fields=["email", "updated_at"]
+                )
+
+            messages.success(
+                request,
+                "Your profile was updated successfully.",
+            )
+            return redirect("employees:my_profile")
+
+    else:
+        form = EmployeeProfileForm(
+            instance=employee,
+            user=request.user,
+        )
+
+    return render(
+        request,
+        "employees/my_profile.html",
+        {
+            "employee": employee,
+            "form": form,
+        },
+    )

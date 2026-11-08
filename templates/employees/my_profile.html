@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{# FR-11: an employee's own profile. Any signed-in user with profile.view_own. #}
+
+{% block title %}My Profile{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}">Dashboard</a> › My Profile
+{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  {% if employee %}
+    <div class="card">
+      <h2>Personal information</h2>
+      <dl class="prose">
+        <dt>Full name</dt><dd>{{ employee.first_name }} {{ employee.last_name }}</dd>
+        <dt>Employee number</dt><dd>{{ employee.employee_number }}</dd>
+        <dt>Department</dt><dd>{{ employee.department.department_name }}</dd>
+        <dt>Position</dt><dd>{{ employee.position.position_title }}</dd>
+        <dt>Employment status</dt><dd>{{ employee.employment_status }}</dd>
+      </dl>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h2>Update contact details</h2>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          {% include "partials/form_field.html" with field=field %}
+        {% endfor %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="card">
+      <h2>No employee record</h2>
+      <p>No employee record is linked to your account.</p>
+      <p>Please contact HR for assistance.</p>
+    </div>
+  {% endif %}
+
+  <div class="card" style="margin-top: 16px;">
+    <h2>Account details</h2>
+    <dl class="prose">
+      <dt>Username</dt><dd>{{ request.user.username }}</dd>
+      <dt>Role</dt><dd>{{ request.user.role.role_name|default:"No role" }}</dd>
+    </dl>
+    <p><a href="{% url 'accounts:password_change' %}">Change password</a></p>
+  </div>
+</div>
+{% endblock %}

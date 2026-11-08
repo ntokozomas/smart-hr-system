@@ -9,7 +9,6 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("password/", views.PasswordChangeView.as_view(), name="password_change"),
     path("password/done/", views.PasswordChangeDoneView.as_view(), name="password_change_done"),
-    path("profile/", views.my_profile, name="profile"),
     # T13: Administrator screens (FR-03, FR-04, Design 4.8.4) and notifications (FR-17)
     path("users/", admin_views.user_list, name="users"),
     path("users/new/", admin_views.user_create, name="user_create"),

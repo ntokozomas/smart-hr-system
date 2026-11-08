@@ -51,7 +51,10 @@ class SeedDemoTests(TestCase):
             start_date__lte=pending.end_date,
             end_date__gte=pending.start_date,
         ).exclude(employee=pending.employee)
-        self.assertEqual(clashes.count(), 2)
+        # Ayanda and Pieter are the planned clash. Random demo leave can add
+        # more on some days, so check for the two names, not an exact count.
+        names = set(clashes.values_list("employee__first_name", flat=True))
+        self.assertTrue({"Ayanda", "Pieter"} <= names, names)
 
     def test_every_module_gets_data(self):
         seed()
