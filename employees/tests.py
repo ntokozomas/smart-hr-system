@@ -3,6 +3,9 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from employees.models import Department, JobPosition, Employee
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from accounts.models import Role
 
 
 class EmployeeModelTests(TestCase):
@@ -163,3 +166,137 @@ class EmployeeRelationshipAndDatabaseTests(TestCase):
                     "underage.database@example.com",
                     date_of_birth=underage_dob,
                 )
+class EmployeeProfileTests(TestCase):
+
+    def setUp(self):
+        self.department = Department.objects.create(
+            department_name="Profile Engineering"
+        )
+
+        self.position = JobPosition.objects.create(
+            position_title="Administrator"
+        )
+
+        self.employee = Employee.objects.create(
+            first_name="Angilique",
+            last_name="West",
+            email="angilique@example.com",
+            phone_number="0123456789",
+            address="Johannesburg",
+            date_of_birth=date(1995, 5, 10),
+            date_joined=date(2024, 1, 15),
+            employment_status="Active",
+            department=self.department,
+            position=self.position,
+        )
+
+        self.role = Role.objects.create(
+            role_name="Profile Test Employee"
+        )
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="profiletest",
+            email="angilique@example.com",
+            password="TestPassword123!",
+            first_name="Angilique",
+            last_name="West",
+            role=self.role,
+            employee=self.employee,
+        )
+
+        self.profile_url = reverse("employees:my_profile")
+        self.client.login(
+            username="profiletest",
+            password="TestPassword123!",
+        )
+
+    def test_employee_can_view_own_profile(self):
+        response = self.client.get(self.profile_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["employee"],
+            self.employee,
+        )
+
+    def test_profile_displays_employee_details(self):
+        response = self.client.get(self.profile_url)
+
+        self.assertContains(response, "Angilique")
+        self.assertContains(response, "West")
+        self.assertContains(response, self.employee.employee_number)
+        self.assertContains(response, "Profile Engineering")
+
+    def test_employee_can_update_contact_details(self):
+        response = self.client.post(
+            self.profile_url,
+            {
+                "email": "updated@example.com",
+                "phone_number": "0821234567",
+                "address": "Pretoria",
+            },
+            follow=True,
+        )
+
+        self.employee.refresh_from_db()
+        self.user.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.employee.email, "updated@example.com")
+        self.assertEqual(self.employee.phone_number, "0821234567")
+        self.assertEqual(self.employee.address, "Pretoria")
+        self.assertEqual(self.user.email, "updated@example.com")
+        self.assertContains(
+            response,
+            "Your profile was updated successfully.",
+        )
+
+    def test_employee_cannot_use_another_accounts_email(self):
+        User = get_user_model()
+
+        User.objects.create_user(
+            username="anotheruser",
+            email="taken@example.com",
+            password="TestPassword123!",
+            role=self.role,
+        )
+
+        response = self.client.post(
+            self.profile_url,
+            {
+                "email": "taken@example.com",
+                "phone_number": "0821234567",
+                "address": "Pretoria",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.employee.refresh_from_db()
+        self.assertEqual(
+            self.employee.email,
+            "angilique@example.com",
+        )
+
+    def test_user_without_employee_record_sees_assistance_message(self):
+        User = get_user_model()
+
+        unlinked_user = User.objects.create_user(
+            username="unlinkeduser",
+            email="unlinked@example.com",
+            password="TestPassword123!",
+            role=self.role,
+        )
+
+        self.client.force_login(unlinked_user)
+
+        response = self.client.get(self.profile_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["employee"])
+        self.assertContains(
+            response,
+            "No employee record is linked to your account.",
+        )

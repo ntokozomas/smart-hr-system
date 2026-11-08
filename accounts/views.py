@@ -61,7 +61,7 @@ def my_profile(request):
 
         if form.is_valid():
             form.save()
-            return redirect("accounts:profile")
+            return redirect("employees:my_profile")
     else:
         form = ProfileForm(request.POST, instance=request.user)
 

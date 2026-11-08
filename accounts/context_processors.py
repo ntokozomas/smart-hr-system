@@ -11,8 +11,7 @@ def _is_active(request, url_name):
     match = getattr(request, "resolver_match", None)
     if match is None:
         return False
-    if ":" in url_name:
-        return match.namespace == url_name.split(":", 1)[0]
+    
     return match.view_name == url_name
 
 
@@ -49,7 +48,7 @@ def navigation(request):
     except NoReverseMatch:
         search_url = None
     try:
-        profile_url = reverse("accounts:profile")
+        profile_url = reverse("employees:my_profile")
     except NoReverseMatch:
         profile_url = None
     return {
