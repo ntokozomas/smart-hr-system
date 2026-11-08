@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib.auth import get_user_model
+
 from .models import Employee
 
 User = get_user_model()
+
 
 class EmployeeForm(forms.ModelForm):
     """Form for creating and updating employee records."""
@@ -23,7 +25,8 @@ class EmployeeForm(forms.ModelForm):
             "position",
             "manager",
         ]
-    widgets = {
+
+        widgets = {
             "first_name": forms.TextInput(attrs={
                 "placeholder": "Enter first name",
             }),
@@ -47,6 +50,8 @@ class EmployeeForm(forms.ModelForm):
                 "type": "date",
             }),
         }
+
+
 class EmployeeProfileForm(forms.ModelForm):
     """Allow employees to update their own contact information."""
 

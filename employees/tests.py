@@ -190,9 +190,8 @@ class EmployeeProfileTests(TestCase):
             position=self.position,
         )
 
-        self.role = Role.objects.create(
-            role_name="Profile Test Employee"
-        )
+        # The seeded Employee role holds profile.view_own (migration 0008).
+        self.role = Role.objects.get(role_name="Employee")
 
         User = get_user_model()
 
@@ -211,6 +210,19 @@ class EmployeeProfileTests(TestCase):
             username="profiletest",
             password="TestPassword123!",
         )
+
+    def test_unauthenticated_user_is_redirected_to_login(self):
+        self.client.logout()
+        response = self.client.get(self.profile_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("accounts:login"), response["Location"])
+
+    def test_employee_form_keeps_date_pickers(self):
+        from .forms import EmployeeForm
+
+        form = EmployeeForm()
+        self.assertEqual(form.fields["date_of_birth"].widget.input_type, "date")
+        self.assertEqual(form.fields["date_joined"].widget.input_type, "date")
 
     def test_employee_can_view_own_profile(self):
         response = self.client.get(self.profile_url)

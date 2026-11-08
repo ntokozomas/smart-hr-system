@@ -6,12 +6,6 @@ from django.urls import NoReverseMatch, reverse
 from .menu import MENU
 from .permissions import has_any_permission, permission_codes, role_name
 
-def _is_active(request, url_name):
-    match = getattr(request, "resolver_match", None)
-    if match is None:
-        return False
-    
-    return match.view_name == url_name
 
 def _mark_active(request, groups):
     """Highlight the menu item for the current page: the item whose address is the
@@ -28,7 +22,6 @@ def _mark_active(request, groups):
                 best, best_len = item, len(url)
     if best is not None:
         best["active"] = True
-
 
 
 def visible_menu(request):
