@@ -18,6 +18,10 @@ Django 5.2 + PostgreSQL. Check the group's build reference before adding anythin
        python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
 6. python manage.py migrate
 7. python manage.py createsuperuser
+8. Load the demo data (45 staff, leave, attendance, applicants and more):
+       python manage.py seed_demo
+   It prints the demo logins (thandi = HR Officer, johan = Manager, sipho = Employee,
+   sysadmin = Administrator; password SmartHr2026). To start fresh: seed_demo --reset
 
 ## Run
 
@@ -79,3 +83,13 @@ Ready-made pieces: `{% include "partials/form.html" with form=form submit_label=
 (inside `table-wrap`), `btn btn-primary / btn-success / btn-secondary / btn-danger`,
 `stat-grid` + `stat-card`, `alert alert-warning`. Show messages with
 `messages.success(request, "...")`. Public pages extend `base_public.html`.
+
+**4. Audit log and notifications.** Logins, failed logins, lockouts, user and role changes,
+employee changes and leave decisions are logged automatically. Log anything else that
+matters, for example report exports, and notify people when something needs their attention:
+
+    from accounts.audit import log_action
+    from accounts.notifications import notify
+
+    log_action("Export", "Exported the leave report as PDF")
+    notify(employee.user_account, "Your onboarding task is due tomorrow.", link="/lifecycle/")

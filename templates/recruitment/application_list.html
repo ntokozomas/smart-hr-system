@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Applications{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> / <a href="{% url 'recruitment:home' %}">Recruitment</a> / Applications{% endblock %}
+{% block page_title %}Applications pipeline{% endblock %}
+{% block content %}
+<form method="get" class="card" style="margin-bottom:16px">
+<div class="form-field">
+<label class="label" for="app-search">Search applicants or vacancies</label>
+<input id="app-search" name="q" value="{{ query }}" placeholder="Applicant name, email or vacancy">
+</div>
+<div class="form-field">
+<label class="label" for="status">Filter by status</label>
+<select id="status" name="status">
+<option value="">All stages</option>
+{% for value,label in statuses %}
+<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+</div>
+<button class="btn btn-secondary" type="submit">Apply filters</button>
+<a href="{% url 'recruitment:application_list' %}">Clear</a>
+</form>
+{% if page_obj.object_list %}
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Applicant</th><th>Vacancy</th><th>Applied</th><th>Match score</th><th>Stage</th><th></th></tr></thead>
+<tbody>{% for application in page_obj %}
+<tr>
+<td>{{ application.applicant.first_name }} {{ application.applicant.last_name }}<br><span class="help-text">{{ application.applicant.email }}</span></td>
+<td>{{ application.vacancy.title }}</td>
+<td>{{ application.application_date|date:"d M Y" }}</td>
+<td>{% if application.match_score != None %}{{ application.match_score }}%{% else %}Not assessed{% endif %}</td>
+<td><span class="badge pend">{{ application.status }}</span></td>
+<td><a href="{% url 'recruitment:application_detail' application.pk %}">Review</a></td>
+</tr>
+{% endfor %}</tbody></table></div>
+<div class="pagination"><span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span><div class="pages">
+{% if page_obj.has_previous %}<a href="?q={{ query|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+{% if page_obj.has_next %}<a href="?q={{ query|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</div></div>
+{% else %}<div class="empty-state">No applications found.</div>{% endif %}
+{% endblock %}

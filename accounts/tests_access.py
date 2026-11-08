@@ -100,6 +100,21 @@ class LoginTests(TestCase):
     def test_FR02_login_page_is_public(self):
         self.assertEqual(self.client.get(reverse("accounts:login")).status_code, 200)
 
+    def test_login_page_layout(self):
+        response = self.client.get(reverse("accounts:login"))
+        self.assertContains(response, "login-split")
+        self.assertContains(response, "img/login-team.svg")
+        self.assertContains(response, "Forgot your password?")
+        self.assertContains(response, reverse("recruitment:careers"))
+        self.assertContains(response, "Protected under POPIA.")
+
+    def test_login_error_keeps_the_new_layout(self):
+        response = self.client.post(
+            reverse("accounts:login"), {"username": "thandi", "password": "wrong-pass1"}
+        )
+        self.assertContains(response, "login-split")
+        self.assertContains(response, "Invalid username or password.")
+
     def test_FR06_logout_ends_the_session(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse("accounts:logout"))

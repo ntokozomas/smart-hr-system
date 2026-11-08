@@ -4,11 +4,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
 
+from . import lockout
+
 
 class EmailOrUsernameBackend(ModelBackend):
     """Authenticate with a username or an email address plus a password.
 
-    Inactive accounts are refused by ``user_can_authenticate`` (FR-10, FR-31).
+    Inactive accounts are refused by ``user_can_authenticate`` (FR-10, FR-31),
+    and locked accounts until their 15 minutes are up (Design 4.8.1).
     """
 
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -30,6 +33,8 @@ class EmailOrUsernameBackend(ModelBackend):
         except User.MultipleObjectsReturned:
             return None
 
+        if lockout.is_locked(user):  # Design 4.8.1
+            return None
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
         return None

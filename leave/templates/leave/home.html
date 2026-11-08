@@ -1,0 +1,166 @@
+
+{% extends "base.html" %}
+{% load ui %}
+
+{% block title %}Leave Management{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}">Dashboard</a> › Leave
+{% endblock %}
+
+{% block page_title %}Leave Management{% endblock %}
+
+{% block page_actions %}
+    {% if can_apply %}
+        <a href="{% url 'leave:apply' %}" class="btn btn-primary">
+            Apply for Leave
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if leave_balances %}
+<div class="card">
+    <h2>My Leave Balances</h2>
+
+    <p>
+        Your leave entitlement, approved leave taken and remaining
+        balance for {{ leave_balances.0.year }}.
+    </p>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Leave Type</th>
+                    <th>Entitlement (Days)</th>
+                    <th>Used (Days)</th>
+                    <th>Remaining (Days)</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for balance in leave_balances %}
+                    <tr>
+                        <td>{{ balance.get_leave_type_display }}</td>
+
+                        <td>
+                            {{ balance.entitlement|floatformat:"-1" }}
+                        </td>
+
+                        <td>
+                            {{ balance.used_days|floatformat:"-1" }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ balance.remaining_days|floatformat:"-1" }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% elif can_apply %}
+<div class="card">
+    <h2>My Leave Balances</h2>
+
+    <p>
+        No leave balances have been configured for your account
+        for the current year. Please contact HR to have your
+        leave entitlements added.
+    </p>
+</div>
+{% endif %}
+
+
+<div class="card">
+    <h2>Leave Applications</h2>
+
+    <p>View and track employee leave applications.</p>
+
+    {% if leave_requests %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Date Submitted</th>
+
+                        {% if can_approve %}
+                            <th>Action</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for leave_request in leave_requests %}
+                        <tr>
+                            <td>
+                                {{ leave_request.employee.first_name }}
+                                {{ leave_request.employee.last_name }}
+                            </td>
+
+                            <td>
+                                {{ leave_request.employee.department.department_name }}
+                            </td>
+
+                            <td>
+                                {{ leave_request.get_leave_type_display }}
+                            </td>
+
+                            <td>
+                                {{ leave_request.start_date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+                                {{ leave_request.end_date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+                                {{ leave_request.days_requested|floatformat:"-1" }}
+                            </td>
+
+                            <td>
+                                {% status_badge leave_request.status %}
+                            </td>
+
+                            <td>
+                                {{ leave_request.date_submitted|date:"d M Y" }}
+                            </td>
+
+                            {% if can_approve %}
+                                <td>
+                                    {% if leave_request.status == "Pending" %}
+                                        <a href="{% url 'leave:review' leave_request.pk %}"
+                                           class="btn btn-primary">
+                                            Review
+                                        </a>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        {% include "partials/empty_state.html" with message="No leave applications have been submitted yet." %}
+    {% endif %}
+
+</div>
+
+{% endblock %}

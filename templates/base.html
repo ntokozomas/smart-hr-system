@@ -16,6 +16,24 @@
       </form>
     {% endif %}
     {% block topbar_extra %}{% endblock %}
+    <details class="bell-menu">
+      <summary aria-label="Notifications{% if unread_count %}, {{ unread_count }} unread{% endif %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>
+        {% if unread_count %}<span class="bell-count">{{ unread_count }}</span>{% endif %}
+      </summary>
+      <div class="menu notes-menu">
+        <div class="notes-head">Notifications</div>
+        {% for note in recent_notifications %}
+          <a class="note{% if not note.is_read %} unread{% endif %}" href="{% url 'accounts:notification_open' note.pk %}">
+            <span>{{ note.message }}</span>
+            <span class="note-time">{{ note.created_at|timesince }} ago</span>
+          </a>
+        {% empty %}
+          <p class="note-empty">No notifications yet.</p>
+        {% endfor %}
+        <a class="notes-all" href="{% url 'accounts:notifications' %}">See all notifications</a>
+      </div>
+    </details>
     <details class="user-menu">
       <summary>
         <span class="user-text">

@@ -35,6 +35,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.audit.CurrentRequestMiddleware",  # lets the audit log record who made a change
     # FR-02: every page needs a login unless its view is marked @login_not_required
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -87,6 +88,14 @@ SESSION_COOKIE_HTTPONLY = True
 # Cookies only travel over HTTPS once DEBUG is off (Design 4.8.1)
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+
+# HTTPS on the live server (Design 4.8.3, NFR-02). Off while developing with DEBUG on.
+SECURE_SSL_REDIRECT = os.getenv("DJANGO_SSL_REDIRECT", str(not DEBUG)) == "True"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # Nginx in front (4.3.3)
+SECURE_HSTS_SECONDS = 0 if DEBUG else 60 * 60 * 24 * 365
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

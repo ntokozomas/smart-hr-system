@@ -1,0 +1,29 @@
+{% extends "base_public.html" %}
+{% block title %}Application status{% endblock %}
+{% block content %}
+<div class="narrow card" style="margin:0 auto">
+<h1>Check application status</h1>
+<p>Enter the application reference you received and the email address used to apply.</p>
+<form method="post">
+{% csrf_token %}
+<div class="form-field">
+<label class="label" for="reference">Application reference</label>
+<input id="reference" name="reference" required>
+</div>
+<div class="form-field">
+<label class="label" for="email">Email address</label>
+<input id="email" name="email" type="email" required>
+</div>
+<button class="btn btn-primary" type="submit">Check status</button>
+</form>
+{% if error %}<div class="alert alert-error" style="margin-top:16px">{{ error }}</div>{% endif %}
+{% if application %}
+<hr>
+<h2>Application details</h2>
+<p><strong>Vacancy:</strong> {{ application.vacancy.title }}</p>
+<p><strong>Application date:</strong> {{ application.application_date|date:"d M Y" }}</p>
+<p><strong>Current status:</strong> <span class="badge pend">{{ application.status }}</span></p>
+{% endif %}
+<p style="margin-top:20px"><a href="{% url 'recruitment:careers' %}">Return to Careers</a></p>
+</div>
+{% endblock %}

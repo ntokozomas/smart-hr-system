@@ -14,7 +14,7 @@ WAITING = {
     "Pending", "Received", "Screening", "Interview", "In Progress",
     "Onboarding", "On Leave", "Late",
 }
-BAD = {"Rejected", "Cancelled", "Inactive", "Closed", "Absent", "Overdue", "Conflict"}
+BAD = {"Rejected", "Cancelled", "Inactive", "Closed", "Absent", "Overdue", "Conflict", "Locked"}
 
 
 @register.filter

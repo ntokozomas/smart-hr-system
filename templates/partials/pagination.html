@@ -1,13 +1,33 @@
-{% comment %}Pagination for tables: 25 rows per page and a record count (4.7.3).
-Usage: paginate in the view with Paginator(qs, 25), then {% include "partials/pagination.html" with page_obj=page_obj %}{% endcomment %}
+
+{% comment %}
+Reusable pagination for tables.
+Preserves all current filters when navigating between pages.
+{% endcomment %}
+
 {% if page_obj %}
   <div class="pagination">
-    <span class="count">{{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}</span>
+    <span class="count">
+      {{ page_obj.paginator.count }}
+      record{{ page_obj.paginator.count|pluralize }}
+    </span>
+
     {% if page_obj.paginator.num_pages > 1 %}
       <span class="pages">
-        {% if page_obj.has_previous %}<a class="btn btn-secondary" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+        {% if page_obj.has_previous %}
+          <a class="btn btn-secondary"
+             href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+            Previous
+          </a>
+        {% endif %}
+
         Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        {% if page_obj.has_next %}<a class="btn btn-secondary" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+
+        {% if page_obj.has_next %}
+          <a class="btn btn-secondary"
+             href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+            Next
+          </a>
+        {% endif %}
       </span>
     {% endif %}
   </div>

@@ -2,6 +2,8 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+
+from . import lockout
 from .models import User
 
 
@@ -23,6 +25,17 @@ class LoginForm(AuthenticationForm):
         "invalid_login": "Invalid username or password.",
         "inactive": "This account is inactive. Please contact the administrator.",
     }
+
+    def clean(self):
+        """Refuse locked accounts with a clear message before checking the password."""
+        user = lockout.find_user(self.cleaned_data.get("username"))
+        if lockout.is_locked(user):
+            raise forms.ValidationError(
+                "Too many failed login attempts. This account is locked for "
+                f"{lockout.minutes_left(user)} more minute(s).",
+                code="locked",
+            )
+        return super().clean()
 
 class ProfileForm(forms.ModelForm):
     """Allow users to update their own personal account details."""

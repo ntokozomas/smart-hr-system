@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Reports{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'analytics/analytics.css' %}">{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Dashboard</a> › Reports{% endblock %}
+{% block page_title %}Leave and absenteeism report{% endblock %}
+{% block page_actions %}
+  {% if report %}
+    <a class="btn btn-secondary" href="{% url 'analytics:export' 'csv' %}{% if query %}?{{ query }}{% endif %}">Export CSV</a>
+    <a class="btn btn-primary" href="{% url 'analytics:export' 'pdf' %}{% if query %}?{{ query }}{% endif %}">Export PDF</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<form class="card filter-bar report-filters" method="get" action="{% url 'analytics:reports' %}">
+  {% for field in form %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}{{ field }}</label>
+  {% endfor %}
+  <button class="btn btn-primary" type="submit">Apply filters</button>
+  <a class="btn btn-secondary" href="{% url 'analytics:reports' %}">Reset</a>
+</form>
+
+{% if form.errors %}
+  <div class="messages">
+    {% for field, errors in form.errors.items %}
+      {% for error in errors %}<div class="alert alert-error">{{ error }}</div>{% endfor %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if report %}
+  <div class="report-details">
+    {% for label, value in details %}<span>{{ label }}: <strong>{{ value }}</strong></span>{% endfor %}
+  </div>
+
+  <div class="stat-grid">
+    <div class="card stat-card"><div class="stat-label">Leave days taken</div><div class="stat-value">{{ report.totals.leave_total }}</div><div class="stat-note">Approved, working days</div></div>
+    <div class="card stat-card amber"><div class="stat-label">Days absent</div><div class="stat-value">{{ report.totals.absent }}</div><div class="stat-note">Of {{ report.totals.expected }} expected working days</div></div>
+    <div class="card stat-card amber"><div class="stat-label">Absenteeism rate</div><div class="stat-value">{{ report.totals.absenteeism|floatformat:1 }}%</div></div>
+    <div class="card stat-card grey"><div class="stat-label">Late arrivals</div><div class="stat-value">{{ report.totals.late }}</div></div>
+    <div class="card stat-card green"><div class="stat-label">Headcount</div><div class="stat-value">{{ report.totals.headcount }}</div><div class="stat-note">At the end of the period</div></div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="card">{% include "analytics/bar_chart.html" with chart=leave_chart title="Leave days per month" empty_message="No approved leave in this period." %}</div>
+    <div class="card">{% include "analytics/bar_chart.html" with chart=absenteeism_chart title="Absenteeism rate per month (%)" empty_message="No absences in this period." %}</div>
+  </div>
+
+  {% for heading, headers, rows in tables %}
+    <h2>{{ heading }}</h2>
+    {% if rows %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>{% for header in headers %}<th{% if not forloop.first %} class="num"{% endif %}>{{ header }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr{% if row.0 == "Total" %} class="total"{% endif %}>{% for cell in row %}<td{% if not forloop.first %} class="num"{% endif %}>{{ cell }}</td>{% endfor %}</tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with message="No records for this period." %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,16 +1,47 @@
 {% extends "base_public.html" %}
+{% load static %}
 {% block title %}Log in{% endblock %}
-{% block content %}
-<div class="auth-card card">
-  <h1>Log in</h1>
-  <p class="help-text">Use your username or work email.</p>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {% for error in form.non_field_errors %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endfor %}
-    {% include "partials/form_field.html" with field=form.username %}
-    {% include "partials/form_field.html" with field=form.password %}
-    <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit" class="btn btn-primary btn-block">Log in</button>
-  </form>
+{% block page %}
+<div class="login-split">
+  <aside class="login-brand" aria-hidden="true">
+    <span class="logo">Smart<span>HR</span></span>
+    <p class="login-tagline">People, leave and hiring in one place.</p>
+    <div class="login-art"><img src="{% static 'img/login-team.svg' %}" alt=""></div>
+    <p class="login-foot">Smart HR System · IT Project 700</p>
+  </aside>
+
+  <main class="login-side">
+    <span class="logo login-logo-small">Smart<span>HR</span></span>
+    <div class="auth-card card">
+      <h1>Log in</h1>
+      <p class="help-text">Use your username or work email.</p>
+      {% include "partials/messages.html" %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endfor %}
+        {% include "partials/form_field.html" with field=form.username %}
+        <div class="form-field password-field{% if form.password.errors %} has-error{% endif %}">
+          <label class="label" for="{{ form.password.id_for_label }}">{{ form.password.label }} <span class="req" aria-hidden="true">*</span></label>
+          <div class="password-wrap">
+            {{ form.password }}
+            <button type="button" class="toggle-password" aria-label="Show password" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 5C6.5 5 2.7 9.2 1.5 12c1.2 2.8 5 7 10.5 7s9.3-4.2 10.5-7C21.3 9.2 17.5 5 12 5zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9zm0-2.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+            </button>
+          </div>
+          <p class="caps-warning" role="status" hidden>Caps Lock is on.</p>
+          {% for error in form.password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <details class="forgot">
+          <summary>Forgot your password?</summary>
+          <p class="help-text">Ask your Administrator to reset it.</p>
+        </details>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn btn-primary btn-block">Log in</button>
+      </form>
+      <p class="login-careers">Looking for a job? <a href="{% url 'recruitment:careers' %}">View vacancies →</a></p>
+    </div>
+    <p class="login-note">Protected under POPIA.</p>
+  </main>
 </div>
+<script src="{% static 'js/login.js' %}"></script>
 {% endblock %}

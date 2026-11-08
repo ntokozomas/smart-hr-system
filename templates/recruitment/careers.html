@@ -1,0 +1,21 @@
+{% extends "base_public.html" %}
+{% block title %}Careers{% endblock %}
+{% block content %}
+<div class="narrow" style="margin:0 auto">
+<h1>Careers at Smart HR</h1>
+<p>Explore our current opportunities and apply for a position.</p>
+<p><a href="{% url 'recruitment:application_status' %}">Already applied? Check your application status.</a></p>
+{% for vacancy in vacancies %}
+<article class="card" style="margin-top:16px">
+<h2 style="margin-top:0">{{ vacancy.title }}</h2>
+<p><strong>Department:</strong> {{ vacancy.department }}</p>
+<p><strong>Position:</strong> {{ vacancy.position }}</p>
+<p>{{ vacancy.description|truncatewords:35 }}</p>
+<p class="help-text">{% if vacancy.closing_date %}Closes {{ vacancy.closing_date|date:"d M Y" }}{% else %}Closing date not specified{% endif %}</p>
+<a class="btn btn-primary" href="{% url 'recruitment:career_detail' vacancy.pk %}">View vacancy</a>
+</article>
+{% empty %}
+<div class="empty-state">There are currently no open vacancies. Please check again soon.</div>
+{% endfor %}
+</div>
+{% endblock %}
