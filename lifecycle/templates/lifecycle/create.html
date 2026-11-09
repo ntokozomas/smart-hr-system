@@ -1,32 +1,60 @@
+
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="card">
 
-    <h2 class="mb-4">Create Onboarding Record</h2>
+    <h2>Create Onboarding Record</h2>
 
-    <div class="card">
-        <div class="card-body">
+    <form method="POST">
 
-            <form method="POST">
+        {% csrf_token %}
 
-                {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
 
-                {{ form.as_p }}
+        {% for field in form %}
+            <div class="form-field">
 
-                <button type="submit" class="btn btn-primary">
-                    Save Onboarding
-                </button>
+                <label class="label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="req">*</span>
+                    {% endif %}
+                </label>
 
-                <a href="{% url 'lifecycle:home' %}" class="btn btn-secondary">
-                    Cancel
-                </a>
+                {{ field }}
 
-            </form>
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+
+                {% if field.errors %}
+                    <div class="field-error">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+
+            <button type="submit" class="btn btn-primary">
+                Save Onboarding
+            </button>
+
+            <a href="{% url 'lifecycle:home' %}" class="btn btn-secondary">
+                Cancel
+            </a>
 
         </div>
-    </div>
+
+    </form>
 
 </div>
 

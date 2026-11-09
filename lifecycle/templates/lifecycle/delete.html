@@ -1,35 +1,40 @@
+
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h3>Delete Onboarding Record</h3>
+
+<div class="card">
+
+    <h2>Delete Onboarding Record</h2>
+
+    <p>
+        Are you sure you want to delete the onboarding record for
+        <strong>{{ onboarding.employee }}</strong>?
+    </p>
+
+    <p class="field-error">
+        This action cannot be undone. Any tasks linked to this
+        onboarding record may also be deleted.
+    </p>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <div class="form-actions">
+
+            <button type="submit" class="btn btn-primary">
+                Confirm Delete
+            </button>
+
+            <a href="{% url 'lifecycle:home' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+
         </div>
 
-        <div class="card-body">
-            <p>
-                Are you sure you want to delete the onboarding record for
-                <strong>{{ onboarding.employee }}</strong>?
-            </p>
+    </form>
 
-            <p class="text-danger">
-                This action cannot be undone. Any tasks linked to this
-                onboarding record may also be deleted.
-            </p>
-
-            <form method="POST">
-                {% csrf_token %}
-
-                <button type="submit" class="btn btn-danger">
-                    Confirm Delete
-                </button>
-
-                <a href="{% url 'lifecycle:home' %}" class="btn btn-secondary">
-                    Cancel
-                </a>
-            </form>
-        </div>
-    </div>
 </div>
+
 {% endblock %}

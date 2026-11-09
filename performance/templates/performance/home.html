@@ -1,44 +1,44 @@
-
 {% extends "base.html" %}
+
+{% block title %}Performance Management{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    / Performance Management
+{% endblock %}
+
+{% block page_title %}Performance Management{% endblock %}
+
+{% block page_actions %}
+    {% if perms.performance.manage %}
+        <a href="{% url 'performance:create_review' %}" class="btn btn-primary">
+            + Create Performance Review
+        </a>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 
-<div class="container mt-4">
+<section class="card">
+    <h2>Performance Reviews</h2>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Review Period</th>
+                    <th>Review Date</th>
+                    <th>Rating</th>
+                    <th>Reviewed By</th>
+                    <th>Comments</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
 
-        <h2>Performance Management</h2>
-
-        <a href="{% url 'performance:create_review' %}"
-           class="btn btn-primary">
-            + Create Performance Review
-        </a>
-
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-
-            <table class="table table-striped table-hover">
-
-                <thead>
+            <tbody>
+                {% for record in performance_records %}
                     <tr>
-                        <th>Employee</th>
-                        <th>Review Period</th>
-                        <th>Review Date</th>
-                        <th>Rating</th>
-                        <th>Reviewed By</th>
-                        <th>Comments</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    {% for record in performance_records %}
-
-                    <tr>
-
                         <td>
                             {{ record.employee.first_name }}
                             {{ record.employee.last_name }}
@@ -48,45 +48,52 @@
 
                         <td>{{ record.review_date }}</td>
 
-                        <td>{{ record.rating }} / 5</td>
+                        <td>
+                            <span class="badge ok">
+                                {{ record.rating }} / 5
+                            </span>
+                        </td>
 
                         <td>
                             {{ record.reviewed_by.get_full_name|default:record.reviewed_by.username }}
                         </td>
 
-                        <td>{{ record.comments|default:"-" }}</td>
+                        <td>{{ record.comments|default:"—" }}</td>
 
                         <td>
-                            <a href="{% url 'performance:edit_review' record.pk %}"
-                               class="btn btn-sm btn-warning">
-                                Edit
-                            </a>
+                            {% if perms.performance.manage %}
+                                <a
+                                    href="{% url 'performance:edit_review' record.pk %}"
+                                    class="btn btn-secondary"
+                                >
+                                    Edit
+                                </a>
 
-                            <a href="{% url 'performance:delete_review' record.pk %}"
-                               class="btn btn-sm btn-danger">
-                                Delete
-                            </a>
+                                <a
+                                    href="{% url 'performance:delete_review' record.pk %}"
+                                    class="btn btn-secondary"
+                                >
+                                    Delete
+                                </a>
+                            {% endif %}
                         </td>
-
                     </tr>
 
-                    {% empty %}
-
+                {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">
-                            No performance reviews found.
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <h3>No performance reviews found</h3>
+                                <p>
+                                    No performance reviews are available for your access level.
+                                </p>
+                            </div>
                         </td>
                     </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-
-</div>
+</section>
 
 {% endblock %}

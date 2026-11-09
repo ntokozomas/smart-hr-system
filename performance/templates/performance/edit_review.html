@@ -1,37 +1,60 @@
+
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="card">
 
-    <div class="card">
+    <h2>Edit Performance Review</h2>
 
-        <div class="card-header">
-            <h2>Edit Performance Review</h2>
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-field">
+
+                <label class="label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="req">*</span>
+                    {% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+
+                {% if field.errors %}
+                    <div class="field-error">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+
+            <button type="submit" class="btn btn-primary">
+                Update Review
+            </button>
+
+            <a href="{% url 'performance:home' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+
         </div>
 
-        <div class="card-body">
-
-            <form method="POST">
-
-                {% csrf_token %}
-
-                {{ form.as_p }}
-
-                <button type="submit" class="btn btn-primary">
-                    Update Review
-                </button>
-
-                <a href="{% url 'performance:home' %}"
-                   class="btn btn-secondary">
-                    Cancel
-                </a>
-
-            </form>
-
-        </div>
-
-    </div>
+    </form>
 
 </div>
 

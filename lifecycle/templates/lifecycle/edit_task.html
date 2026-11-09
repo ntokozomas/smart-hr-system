@@ -1,20 +1,65 @@
+
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1>Edit Onboarding Task</h1>
 
-    <p>
+<div class="card">
+
+    <h2>Edit Onboarding Task</h2>
+
+    <p class="help-text">
         Employee: {{ task.onboarding.employee }}
     </p>
 
     <form method="post">
+
         {% csrf_token %}
 
-        {{ form.as_p }}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
 
-        <button type="submit">Update Task</button>
-        <a href="{% url 'lifecycle:home' %}">Cancel</a>
+        {% for field in form %}
+            <div class="form-field">
+
+                <label class="label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="req">*</span>
+                    {% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+
+                {% if field.errors %}
+                    <div class="field-error">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+
+            <button type="submit" class="btn btn-primary">
+                Update Task
+            </button>
+
+            <a href="{% url 'lifecycle:home' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </div>
+
     </form>
+
 </div>
+
 {% endblock %}
