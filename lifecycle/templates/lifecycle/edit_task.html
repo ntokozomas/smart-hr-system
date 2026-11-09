@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Onboarding Task</h1>
+
+    <p>
+        Employee: {{ task.onboarding.employee }}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Update Task</button>
+        <a href="{% url 'lifecycle:home' %}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

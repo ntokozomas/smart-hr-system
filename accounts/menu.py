@@ -21,7 +21,8 @@ MENU = [
             ("Leave", "leave:home", ("leave.apply", "leave.view", "leave.approve")),
             ("Attendance", "leave:attendance", ("attendance.record_own", "attendance.view")),
             ("Recruitment", "recruitment:home", ("recruitment.manage",)),
-            ("Onboarding & Exit", "lifecycle:home", ("lifecycle.manage",)),
+            ("Employee Onboarding", "lifecycle:home", ("lifecycle.manage",)),
+            ("Employee Exit Management", "lifecycle:exit_management", ("lifecycle.manage",)),
             (
                 "Performance",
                 "performance:home",
