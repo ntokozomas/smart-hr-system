@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Employee Onboarding</h2>
+
+        <a href="{% url 'lifecycle:create' %}" class="btn btn-primary">
+            + Add Onboarding
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <table class="table table-striped table-hover">
+
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Tasks</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for onboarding in onboarding_records %}
+
+                    <tr>
+                        <td>
+                            {{ onboarding.employee.first_name }}
+                            {{ onboarding.employee.last_name }}
+                        </td>
+
+                        <td>{{ onboarding.start_date }}</td>
+
+                        <td>{{ onboarding.end_date|default:"-" }}</td>
+
+                        <td>{{ onboarding.status }}</td>
+
+                        <td>
+                            {{ onboarding.tasks.count }}
+                        </td>
+
+                        <td>
+                            <div class="d-flex gap-2">
+
+                                <a href="{% url 'lifecycle:create_task' onboarding.id %}"
+                                   class="btn btn-sm btn-success">
+                                    + Add Task
+                                </a>
+
+                                <a href="{% url 'lifecycle:edit_onboarding' onboarding.id %}"
+                                   class="btn btn-sm btn-warning">
+                                    Edit
+                                </a>
+
+                                <a href="{% url 'lifecycle:delete_onboarding' onboarding.id %}"
+                                   class="btn btn-sm btn-danger">
+                                    Delete
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            No onboarding records found.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

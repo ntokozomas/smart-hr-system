@@ -12,6 +12,8 @@ urlpatterns = [
     path("leave/", include("leave.urls")),
     path("recruitment/", include("recruitment.urls")),
     path("employees/", include("employees.urls")),
+    path("lifecycle/", include("lifecycle.urls")),
+    path("performance/", include("performance.urls")),
     path("reports/", include("analytics.urls")),
     path("admin/", admin.site.urls),
 ]
